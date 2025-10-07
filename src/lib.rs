@@ -23,9 +23,9 @@ const S_BOX: [[u8; 16]; 16] = [
 ];
 
 /// Returns true if the key is weak.
-pub fn is_weak_key(key: u128) -> bool {
+pub fn is_weak_key(main_key: u128) -> bool {
     matches!(
-        key,
+        main_key,
         0 // 0000...
         | u128::MAX // 1111... 
         | 0x55555555555555555555555555555555 // 0101... 
@@ -34,15 +34,21 @@ pub fn is_weak_key(key: u128) -> bool {
 }
 
 pub struct Picaro {
-    pub key: u128,
+    main_key: u128,
 }
 
 impl Picaro {
+    pub fn new(main_key: u128) -> Self {
+        assert!(!is_weak_key(main_key), "Weak key was provided!");
+
+        Self { main_key }
+    }
+
     pub fn encrypt(&self, data: u128) -> u128 {
         let [left, right] = split_u128_to_u64(data);
 
         for round in 0..12 {
-            let round_key = round_key(round, self.key);
+            let round_key = round_key(round, self.main_key);
         }
 
         0
@@ -65,8 +71,18 @@ mod tests {
 
     #[test]
     fn encrypt_first_10m_keys() {
-        for i in 0..=10000000 {
-            let p = Picaro { key: i };
+        // Skip first key because it is weak.
+        for i in 1..=10000000 {
+            let p = Picaro::new(i);
+            p.encrypt(12345);
+        }
+    }
+
+    #[test]
+    fn encrypt_last_10m_keys() {
+        // Skip last key because it is weak.
+        for i in (u128::MAX - 10000000)..u128::MAX {
+            let p = Picaro::new(i);
             p.encrypt(12345);
         }
     }

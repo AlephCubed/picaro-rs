@@ -23,14 +23,12 @@ fn extended_key(round: u8, main_key: u128) -> u128 {
 #[inline]
 fn t(main_key: u128) -> u128 {
     let split = split_u128_to_u32(main_key);
-    let total: u32 = split.iter().sum();
 
     combine_u32_to_u128([
-        // Todo should maybe be `wrapping_sub`.
-        total - split[0],
-        total - split[1],
-        total - split[2],
-        total - split[3],
+        split[1].wrapping_add(split[2]).wrapping_add(split[3]),
+        split[0].wrapping_add(split[2]).wrapping_add(split[3]),
+        split[0].wrapping_add(split[1]).wrapping_add(split[3]),
+        split[0].wrapping_add(split[1]).wrapping_add(split[2]),
     ])
 }
 
