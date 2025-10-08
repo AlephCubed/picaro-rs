@@ -49,3 +49,26 @@ fn combine_u32_to_u128(parts: [u32; 4]) -> u128 {
         | ((parts[2] as u128) << 32)
         | (parts[3] as u128)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn round_keys_for_first_10m_main_keys() {
+        for i in 0..=10000000 {
+            for round in 0..12 {
+                round_key(round, i);
+            }
+        }
+    }
+
+    #[test]
+    fn round_keys_for_last_10m_main_keys() {
+        for i in (u128::MAX - 10000000)..=u128::MAX {
+            for round in 0..12 {
+                round_key(round, i);
+            }
+        }
+    }
+}

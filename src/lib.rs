@@ -67,26 +67,3 @@ fn split_u128_to_u64(x: u128) -> [u64; 2] {
 fn combine_u64_to_u128(parts: [u64; 2]) -> u128 {
     ((parts[0] as u128) << 64) | (parts[1] as u128)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn encrypt_first_10m_keys() {
-        // Skip first key because it is weak.
-        for i in 1..=10000000 {
-            let p = Picaro::new(i);
-            p.encrypt(12345);
-        }
-    }
-
-    #[test]
-    fn encrypt_last_10m_keys() {
-        // Skip last key because it is weak.
-        for i in (u128::MAX - 10000000)..u128::MAX {
-            let p = Picaro::new(i);
-            p.encrypt(12345);
-        }
-    }
-}
