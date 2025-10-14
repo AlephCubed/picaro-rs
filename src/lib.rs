@@ -1,12 +1,13 @@
-#![no_std]
-
-use crate::expansion::expansion;
-use crate::key_schedule::round_key;
-use crate::s_box::s_box;
-
+mod compression;
 mod expansion;
 mod key_schedule;
 mod s_box;
+
+use crate::compression::compression;
+use crate::expansion::expansion;
+use crate::key_schedule::round_key;
+use crate::s_box::s_box;
+use std::mem::swap;
 
 /// Returns true if the key is weak.
 pub fn is_weak_key(main_key: u128) -> bool {
@@ -34,15 +35,18 @@ impl Picaro {
     }
 
     pub fn encrypt(&self, data: u128) -> u128 {
-        let [left, right] = split_u128_to_u64(data);
+        let [mut left, mut right] = split_u128_to_u64(data);
 
         for round in 0..12 {
             let mut state = expansion(right);
             state ^= round_key(round, self.main_key);
             state = s_box(state);
+            left ^= compression(state);
+
+            swap(&mut left, &mut right);
         }
 
-        0
+        combine_u64_to_u128([left, right])
     }
 }
 

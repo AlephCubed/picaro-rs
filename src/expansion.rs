@@ -1,6 +1,6 @@
-/// The last 6 columns of the matrix G, flipped.
+/// The last 6 columns of the matrix G, transposed.
 /// This makes it easier to perform linear combinations in the [`expansion`] function.
-const G_LAST_SIX_FLIPPED: [[u8; 8]; 6] = [
+const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
     [0x1, 0x5, 0x6, 0xC, 0x9, 0x1, 0xA, 0x1],
     [0x1, 0x1, 0x5, 0x6, 0xC, 0x9, 0x1, 0xA],
     [0xA, 0x1, 0x1, 0x5, 0x6, 0xC, 0x9, 0x1],
@@ -18,10 +18,10 @@ pub(crate) fn expansion(right: u64) -> u128 {
     // The first 8 bytes remain the same,
     // So we loop over the bytes we need to expand.
     for i in 0..6 {
-        // Perform linear combination on pre-flipped matrix.
+        // Perform linear combination on pre-transposed matrix.
         result[8 + i] = bytes
             .iter()
-            .zip(G_LAST_SIX_FLIPPED[i])
+            .zip(G_LAST_SIX_TRANSPOSED[i])
             .map(|(byte, g)| byte.wrapping_mul(g))
             .reduce(|sum, e| sum.wrapping_add(e))
             .expect("There will always be 8 elements");
