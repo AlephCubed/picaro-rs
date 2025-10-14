@@ -1,6 +1,6 @@
 /// Creates a 112-bit round key from the main key.
 pub(crate) fn round_key(round: u8, main_key: u128) -> u128 {
-    extended_key(round, main_key) >> 16
+    (extended_key(round, main_key) << 16) >> 16
 }
 
 /// The amount to shift for a given round, starting from round 1.

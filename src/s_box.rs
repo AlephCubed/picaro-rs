@@ -31,6 +31,8 @@ pub(crate) fn s_box(state: u128) -> u128 {
         bytes[i] = S_BOX_FLAT[bytes[i] as usize];
     }
 
+    assert_eq!(u128::from_be_bytes(bytes) >> 112, 0);
+
     u128::from_be_bytes(bytes)
 }
 

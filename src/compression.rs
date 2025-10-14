@@ -18,16 +18,15 @@ pub(crate) fn compression(state: u128) -> u64 {
     let mut result = (state as u64).to_be_bytes();
 
     for i in 0..8 {
-        result[i] += bytes
-            .iter()
-            .skip(8)
-            .zip(G_LAST_SIX[i])
-            .map(|(byte, g)| {
-                println!("{byte} * {g}");
-                byte.wrapping_mul(g)
-            })
-            .reduce(|sum, e| sum.wrapping_add(e))
-            .expect("There will always be 6 elements");
+        result[i] = result[i].wrapping_add(
+            bytes
+                .iter()
+                .skip(8)
+                .zip(G_LAST_SIX[i])
+                .map(|(byte, g)| byte.wrapping_mul(g))
+                .reduce(|sum, e| sum.wrapping_add(e))
+                .expect("There will always be 6 elements"),
+        );
     }
 
     u64::from_be_bytes(result)

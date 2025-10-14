@@ -13,13 +13,13 @@ const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
 /// Expands the right side into a 112-bit number.
 pub(crate) fn expansion(right: u64) -> u128 {
     let bytes = right.to_be_bytes();
-    let mut result = ((right as u128) << 64).to_be_bytes();
+    let mut result = ((right as u128) << 48).to_be_bytes();
 
     // The first 8 bytes remain the same,
     // So we loop over the bytes we need to expand.
     for i in 0..6 {
         // Perform linear combination on pre-transposed matrix.
-        result[8 + i] = bytes
+        result[8 + 2 + i] = bytes
             .iter()
             .zip(G_LAST_SIX_TRANSPOSED[i])
             .map(|(byte, g)| byte.wrapping_mul(g))
@@ -47,6 +47,8 @@ mod tests {
         assert_eq!(
             result.to_be_bytes(),
             [
+                // Result is only 112-bits, so the first two bytes are zero.
+                0, 0,
                 // First 8 bytes remain the same.
                 0, 1, 2, 3, 4, 5, 6, 7,
                 // Then the linear combinations.
@@ -56,8 +58,6 @@ mod tests {
                 1*0 + A*1 + 1*2 + 1*3 + 5*4 + 6*5 + C*6 + 9*7,
                 9*0 + 1*1 + A*2 + 1*3 + 1*4 + 5*5 + 6*6 + C*7,
                 C*0 + 9*1 + 1*2 + A*3 + 1*4 + 1*5 + 5*6 + 6*7,
-                // Result is only 112-bits, so the last two bytes are zero.
-                0, 0,
             ]
         );
     }
