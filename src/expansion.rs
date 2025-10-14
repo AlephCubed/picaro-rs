@@ -11,7 +11,7 @@ const G_LAST_SIX_FLIPPED: [[u8; 8]; 6] = [
 
 // Todo Performance might be bad.
 /// Expands the right side into a 112-bit number.
-fn expansion(right: u64) -> u128 {
+pub(crate) fn expansion(right: u64) -> u128 {
     let bytes = right.to_be_bytes();
     let mut result = ((right as u128) << 64).to_be_bytes();
 

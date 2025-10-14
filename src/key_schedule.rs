@@ -7,8 +7,12 @@ pub(crate) fn round_key(round: u8, main_key: u128) -> u128 {
 const OMEGA: [u32; 11] = [1, 16, 17, 32, 33, 85, 86, 101, 102, 117, 118];
 
 /// Creates a 128-bit round key from the main key.
+/// # Panics
+/// Will panic if the round number is greater or equal to 12.
 #[inline]
 fn extended_key(round: u8, main_key: u128) -> u128 {
+    assert!(round < 12, "Round number must be less than 12.");
+
     match round {
         0 => main_key,
         _ if round % 2 == 0 => t(main_key).rotate_right(OMEGA[(round - 1) as usize]),
@@ -70,5 +74,11 @@ mod tests {
                 round_key(round, i);
             }
         }
+    }
+
+    #[test]
+    #[should_panic(expected = "Round number must be less than 12.")]
+    fn large_round_number() {
+        round_key(12, 12345);
     }
 }
