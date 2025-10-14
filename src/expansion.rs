@@ -49,7 +49,7 @@ mod tests {
             [
                 // Result is only 112-bits, so the first two bytes are zero.
                 0, 0,
-                // First 8 bytes remain the same.
+                // Next 8 bytes remain the same.
                 0, 1, 2, 3, 4, 5, 6, 7,
                 // Then the linear combinations.
                 1*0 + 5*1 + 6*2 + C*3 + 9*4 + 1*5 + A*6 + 1*7,

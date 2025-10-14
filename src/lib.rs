@@ -109,6 +109,19 @@ mod tests {
     }
 
     #[test]
+    fn encrypt_decrypt_last_10k_plaintext() {
+        for i in (u128::MAX - 10000)..=u128::MAX {
+            let cipher = Picaro::new(12345);
+            let ciphertext = cipher.encrypt(i);
+
+            assert_ne!(i, ciphertext);
+
+            let result = cipher.decrypt(ciphertext);
+            assert_eq!(i, result);
+        }
+    }
+
+    #[test]
     fn encrypt_decrypt_first_10k_keys() {
         // Skip first key since it is weak.
         for i in 1..=10000 {
@@ -120,19 +133,6 @@ mod tests {
 
             let result = cipher.decrypt(ciphertext);
             assert_eq!(plaintext, result);
-        }
-    }
-
-    #[test]
-    fn encrypt_decrypt_last_10k_plaintext() {
-        for i in (u128::MAX - 10000)..=u128::MAX {
-            let cipher = Picaro::new(12345);
-            let ciphertext = cipher.encrypt(i);
-
-            assert_ne!(i, ciphertext);
-
-            let result = cipher.decrypt(ciphertext);
-            assert_eq!(i, result);
         }
     }
 
