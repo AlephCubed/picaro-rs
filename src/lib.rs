@@ -1,5 +1,4 @@
-// Todo
-// #![no_std]
+#![no_std]
 
 mod compression;
 mod expansion;
@@ -38,13 +37,9 @@ impl Picaro {
     }
 
     pub fn encrypt(&self, data: u128) -> u128 {
-        println!("Data:       {data:032x}");
-        println!("Key:        {:032x}", self.main_key);
-
         let [mut left, mut right] = split_u128_to_u64(data);
 
         for round in 0..12 {
-            println!("\nRound #{round}");
             self.round(round, &mut left, &mut right);
             swap(&mut left, &mut right);
         }
@@ -57,7 +52,6 @@ impl Picaro {
         let [mut left, mut right] = split_u128_to_u64(data);
 
         for round in (0..12).rev() {
-            println!("\nRound #{round}");
             self.round(round, &mut left, &mut right);
             swap(&mut left, &mut right);
         }
@@ -68,13 +62,9 @@ impl Picaro {
 
     fn round(&self, round: u8, left: &mut u64, right: &mut u64) {
         let mut state = expansion(*right);
-        println!("Expanded:   {state:032x}");
         state ^= round_key(round, self.main_key);
-        println!("XORed:      {state:032x}");
         state = s_box(state);
-        println!("S-Box:      {state:032x}");
         let result = compression(state);
-        println!("Compressed: {result:032x}");
         *left ^= result;
     }
 }
@@ -103,5 +93,61 @@ mod tests {
 
         let result = cipher.decrypt(ciphertext);
         assert_eq!(plaintext, result);
+    }
+
+    #[test]
+    fn encrypt_decrypt_first_10k_plaintext() {
+        for i in 0..=10000 {
+            let cipher = Picaro::new(12345);
+            let ciphertext = cipher.encrypt(i);
+
+            assert_ne!(i, ciphertext);
+
+            let result = cipher.decrypt(ciphertext);
+            assert_eq!(i, result);
+        }
+    }
+
+    #[test]
+    fn encrypt_decrypt_first_10k_keys() {
+        // Skip first key since it is weak.
+        for i in 1..=10000 {
+            let cipher = Picaro::new(i);
+            let plaintext = 314159;
+            let ciphertext = cipher.encrypt(plaintext);
+
+            assert_ne!(plaintext, ciphertext);
+
+            let result = cipher.decrypt(ciphertext);
+            assert_eq!(plaintext, result);
+        }
+    }
+
+    #[test]
+    fn encrypt_decrypt_last_10k_plaintext() {
+        for i in (u128::MAX - 10000)..=u128::MAX {
+            let cipher = Picaro::new(12345);
+            let ciphertext = cipher.encrypt(i);
+
+            assert_ne!(i, ciphertext);
+
+            let result = cipher.decrypt(ciphertext);
+            assert_eq!(i, result);
+        }
+    }
+
+    #[test]
+    fn encrypt_decrypt_last_10k_keys() {
+        // Skip last key since it is weak.
+        for i in (u128::MAX - 10000)..u128::MAX {
+            let cipher = Picaro::new(i);
+            let plaintext = 314159;
+            let ciphertext = cipher.encrypt(plaintext);
+
+            assert_ne!(plaintext, ciphertext);
+
+            let result = cipher.decrypt(ciphertext);
+            assert_eq!(plaintext, result);
+        }
     }
 }
