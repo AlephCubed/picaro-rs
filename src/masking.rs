@@ -38,10 +38,11 @@ mod tests {
     use crate::Picaro;
 
     #[test]
-    fn encrypt_decrypt() {
+    fn encrypt() {
+        let key = 12345;
         let plaintext = 314159;
 
-        let k = split(12345);
+        let k = split(key);
         let p = split(plaintext);
 
         let ciphertext = k
@@ -55,19 +56,6 @@ mod tests {
             .unwrap();
 
         assert_ne!(plaintext, ciphertext);
-
-        let c = split(ciphertext);
-
-        let result = k
-            .iter()
-            .zip(c)
-            .map(|(k, c)| {
-                let cipher = Picaro::new(*k);
-                cipher.encrypt(c)
-            })
-            .reduce(|a, b| a ^ b)
-            .unwrap();
-
-        assert_eq!(plaintext, result);
+        assert_eq!(Picaro::new(12345).encrypt(plaintext), ciphertext);
     }
 }
