@@ -1,7 +1,9 @@
 #![cfg(feature = "_masking")]
 
+mod operations;
+
 use rand_chacha::ChaCha20Rng;
-use rand_chacha::rand_core::{RngCore, SeedableRng};
+use rand_chacha::rand_core::RngCore;
 
 #[cfg(feature = "masking_level_1")]
 const MASKING_LEVEL: usize = 1;
@@ -10,15 +12,19 @@ const MASKING_LEVEL: usize = 2;
 #[cfg(feature = "masking_level_3")]
 const MASKING_LEVEL: usize = 1;
 
+const SHARE_COUNT: usize = MASKING_LEVEL + 1;
+
+type Shares = [u128; SHARE_COUNT];
+
 // Todo Don't generate new RNG every time.
 /// Splits a sensitive value into multiple shares, depending on the masking level.
-fn split(secret: u128) -> [u128; MASKING_LEVEL + 1] {
-    let mut rand = ChaCha20Rng::from_os_rng();
-    let mut result: [u128; MASKING_LEVEL + 1] = Default::default();
+#[inline]
+fn split(secret: u128, rng: &mut ChaCha20Rng) -> Shares {
+    let mut result = Shares::default();
     result[0] = secret;
 
     for i in 0..MASKING_LEVEL {
-        let r = next_u128(&mut rand);
+        let r = next_u128(rng);
         result[i + 1] = r;
         result[0] ^= r;
     }
@@ -26,6 +32,18 @@ fn split(secret: u128) -> [u128; MASKING_LEVEL + 1] {
     result
 }
 
+#[inline]
+fn merge(shares: Shares) -> u128 {
+    let mut result = shares[0];
+
+    for i in 1..SHARE_COUNT {
+        result ^= shares[i];
+    }
+
+    result
+}
+
+#[inline]
 pub fn next_u128(rng: &mut ChaCha20Rng) -> u128 {
     let a = rng.next_u64() as u128;
     let b = rng.next_u64() as u128;
@@ -36,14 +54,25 @@ pub fn next_u128(rng: &mut ChaCha20Rng) -> u128 {
 mod tests {
     use super::*;
     use crate::Picaro;
+    use rand_chacha::rand_core::SeedableRng;
+
+    #[test]
+    fn split_merge() {
+        let mut rng = ChaCha20Rng::from_os_rng();
+        let secret = 12345;
+
+        assert_eq!(merge(split(secret, &mut rng)), secret);
+    }
 
     #[test]
     fn encrypt() {
+        let mut rng = ChaCha20Rng::from_os_rng();
+
         let key = 12345;
         let plaintext = 314159;
 
-        let k = split(key);
-        let p = split(plaintext);
+        let k = split(key, &mut rng);
+        let p = split(plaintext, &mut rng);
 
         let ciphertext = k
             .iter()
