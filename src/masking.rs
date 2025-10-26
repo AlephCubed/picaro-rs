@@ -2,8 +2,8 @@
 
 mod operations;
 
-use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
+use rand_chacha::rand_core::RngCore;
 
 #[cfg(feature = "masking_level_1")]
 const MASKING_LEVEL: usize = 1;

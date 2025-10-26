@@ -1,4 +1,4 @@
-use crate::masking::{next_u128, Shares, SHARE_COUNT};
+use crate::masking::{SHARE_COUNT, Shares, next_u128};
 use rand_chacha::ChaCha20Rng;
 
 fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
