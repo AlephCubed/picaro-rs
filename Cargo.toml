@@ -3,8 +3,20 @@ name = "picaro-rs"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+_masking = ["getrandom", "rand_chacha"]
+masking_level_1 = ["_masking"]
+masking_level_2 = ["_masking"]
+masking_level_3 = ["_masking"]
+
+[dependencies]
+getrandom = { version = "0.3.4", default-features = false, optional = true }
+rand_chacha = { version = "0.9.0", default-features = false, features = [
+  "os_rng",
+], optional = true }
+
 [dev-dependencies]
-criterion = { version = "0.7.0" }
+criterion = { version = "0.7" }
 
 [[bench]]
 name = "encrypt"

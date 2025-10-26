@@ -3,6 +3,7 @@
 mod compression;
 mod expansion;
 mod key_schedule;
+mod masking;
 mod s_box;
 
 use crate::compression::compression;
