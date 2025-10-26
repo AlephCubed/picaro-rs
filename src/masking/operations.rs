@@ -8,7 +8,7 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {
             rng_table[i][j] = next_u128(rng);
-            rng_table[j][i] = (rng_table[i][j] ^ a[i] & b[j]) ^ a[j] & b[i];
+            rng_table[j][i] = (rng_table[i][j] ^ (a[i] & b[j])) ^ (a[j] & b[i]);
         }
     }
 
