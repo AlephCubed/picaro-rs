@@ -2,8 +2,8 @@
 
 mod operations;
 
-use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::RngCore;
+use rand_chacha::ChaCha20Rng;
 
 #[cfg(feature = "masking_level_1")]
 const MASKING_LEVEL: usize = 1;
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn split_merge() {
-        let mut rng = ChaCha20Rng::from_os_rng();
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
         let secret = 12345;
 
         assert_eq!(merge(split(secret, &mut rng)), secret);
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn encrypt() {
-        let mut rng = ChaCha20Rng::from_os_rng();
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let key = 12345;
         let plaintext = 314159;

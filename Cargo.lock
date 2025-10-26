@@ -261,7 +261,6 @@ name = "picaro-rs"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "getrandom",
  "rand_chacha",
 ]
 

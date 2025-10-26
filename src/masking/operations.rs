@@ -1,14 +1,14 @@
-use crate::masking::{SHARE_COUNT, Shares, next_u128};
+use crate::masking::{next_u128, Shares, SHARE_COUNT};
 use rand_chacha::ChaCha20Rng;
 
 fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
-    let mut r: [[u128; SHARE_COUNT]; SHARE_COUNT] = Default::default();
+    let mut rng_table: [Shares; SHARE_COUNT] = Default::default();
     let mut result = Shares::default();
 
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {
-            r[i][j] = next_u128(rng);
-            r[j][i] = (r[i][j] ^ a[i] & b[j]) ^ a[j] & b[i];
+            rng_table[i][j] = next_u128(rng);
+            rng_table[j][i] = (rng_table[i][j] ^ a[i] & b[j]) ^ a[j] & b[i];
         }
     }
 
@@ -17,7 +17,7 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
 
         for j in 0..SHARE_COUNT {
             if i != j {
-                result[i] ^= r[i][j];
+                result[i] ^= rng_table[i][j];
             }
         }
     }
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn multiplication() {
-        let mut rng = ChaCha20Rng::from_os_rng();
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let a = 15;
         let b = 45;
