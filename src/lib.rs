@@ -71,12 +71,12 @@ impl Picaro {
 }
 
 #[inline]
-fn split_u128_to_u64(x: u128) -> [u64; 2] {
+const fn split_u128_to_u64(x: u128) -> [u64; 2] {
     [(x >> 64) as u64, x as u64]
 }
 
 #[inline]
-fn combine_u64_to_u128(parts: [u64; 2]) -> u128 {
+const fn combine_u64_to_u128(parts: [u64; 2]) -> u128 {
     ((parts[0] as u128) << 64) | (parts[1] as u128)
 }
 

@@ -1,4 +1,4 @@
-use crate::masking::{next_u128, Shares, SHARE_COUNT};
+use crate::masking::{SHARE_COUNT, Shares, next_u128};
 use rand_chacha::ChaCha20Rng;
 
 /// Raises the shares to the power of `2 ^ multiple_of_two`.
