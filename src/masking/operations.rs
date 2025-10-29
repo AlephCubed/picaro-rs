@@ -1,18 +1,51 @@
-use crate::masking::{SHARE_COUNT, Shares, next_u128};
+use crate::masking::{next_u128, Shares, SHARE_COUNT};
+use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
 
-/// Raises the shares to the power of `2 ^ multiple_of_two`.
+/// Raises the shares to the power of `2 ^ squares`.
 /// # Panics
-/// Will panic if `multiple_of_two` is zero
+/// Will panic if `multiple_of_two` is zero.
 #[inline]
-fn share_square(mut shares: Shares, multiple_of_two: u32) -> Shares {
-    assert_ne!(multiple_of_two, 0);
+fn share_square(mut shares: Shares, squares: u32) -> Shares {
+    assert_ne!(squares, 0);
 
     for i in 0..SHARE_COUNT {
-        shares[i] = shares[i].wrapping_pow(2u32.pow(multiple_of_two));
+        for square in 0..squares {
+            shares[i] = byte_square_u128(shares[i]);
+        }
     }
 
     shares
+}
+
+/// Squares all the bytes individually in the AES finite field.
+#[inline]
+fn byte_square_u128(share: u128) -> u128 {
+    u128::from_be_bytes(share.to_be_bytes().map(|b| byte_square(b)))
+}
+
+const AES_POLYNOMIAL: u16 = 0b100011011;
+
+/// Squares a byte in the AES finite field.
+#[inline]
+fn byte_square(byte: u8) -> u8 {
+    let mut result = 0u16;
+
+    // Square using the Frobenius automorphism,`(x + y)^p = x^p + y^p`.
+    // `(x^n)^2 = x^2n`, which is the same as doubling the place value of a bit.
+    for i in 0..8 {
+        result |= ((byte & (1 << i)) as u16) << i;
+    }
+
+    // Reduce using `x^8 = x^4 + x^3 + x + 1`.
+    // We only need to go up to 14 because the maximum value is `x^7` in an 8-bit number.
+    for i in (8..=14).rev() {
+        if result & (1 << i) == 1 {
+            result ^= AES_POLYNOMIAL << (i - 8);
+        }
+    }
+
+    result as u8
 }
 
 fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
@@ -39,14 +72,24 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
     result
 }
 
-fn share_pow(mut x: Shares, rng: &mut ChaCha20Rng) -> Shares {
-    let z = share_square(x, 1);
-    x = share_multiplication(z, x, rng);
-    let w = share_square(x, 2);
-    x = share_multiplication(x, w, rng);
-    x = share_square(x, 4);
-    x = share_multiplication(x, w, rng);
-    share_multiplication(x, z, rng)
+fn share_pow(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
+    let mut z = share_square(x, 1); // XOR of z = x^2
+    refresh_masks(&mut z, rng);
+    let mut y = share_multiplication(z, x, rng); // XOR of y = x^3
+    let mut w = share_square(x, 2); // XOR of w = x^12
+    refresh_masks(&mut w, rng);
+    y = share_multiplication(y, w, rng); // XOR of y = x^15
+    y = share_square(y, 4); // XOR of y = x^240
+    y = share_multiplication(y, w, rng); // XOR of y = x^252
+    share_multiplication(y, z, rng) // XOR of y = x^254
+}
+
+fn refresh_masks(shares: &mut Shares, rng: &mut ChaCha20Rng) {
+    for i in 1..SHARE_COUNT {
+        let temp = next_u128(rng);
+        shares[0] ^= temp;
+        shares[i] ^= temp;
+    }
 }
 
 #[cfg(test)]
@@ -63,7 +106,7 @@ mod tests {
 
         let shares = share_square(split(a, &mut rng), 1);
 
-        assert_eq!(merge(shares), a.wrapping_pow(2));
+        assert_eq!(merge(shares), byte_square_u128(a));
     }
 
     #[test]
@@ -74,7 +117,7 @@ mod tests {
 
         let shares = share_square(split(a, &mut rng), 2);
 
-        assert_eq!(merge(shares), a.wrapping_pow(4));
+        assert_eq!(merge(shares), byte_square_u128(byte_square_u128(a)));
     }
 
     #[test]
@@ -83,9 +126,12 @@ mod tests {
 
         let a = 5;
 
-        let shares = share_square(split(a, &mut rng), 4);
+        let shares = share_square(split(a, &mut rng), 3);
 
-        assert_eq!(merge(shares), a.wrapping_pow(16));
+        assert_eq!(
+            merge(shares),
+            byte_square_u128(byte_square_u128(byte_square_u128(a)))
+        );
     }
 
     #[test]
