@@ -2,6 +2,15 @@ use crate::masking::{next_u128, Shares, SHARE_COUNT};
 use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
 
+#[inline]
+fn share_addition(mut a: Shares, b: Shares) -> Shares {
+    for i in 0..SHARE_COUNT {
+        a[i] ^= b[i];
+    }
+
+    a
+}
+
 /// Raises the shares to the power of `2 ^ squares`.
 /// # Panics
 /// Will panic if `multiple_of_two` is zero.
@@ -72,7 +81,8 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
     result
 }
 
-fn share_pow(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
+/// Used in AES:
+fn share_pow_254(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
     let mut z = share_square(x, 1); // XOR of z = x^2
     refresh_masks(&mut z, rng);
     let mut y = share_multiplication(z, x, rng); // XOR of y = x^3
@@ -84,6 +94,7 @@ fn share_pow(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
     share_multiplication(y, z, rng) // XOR of y = x^254
 }
 
+#[inline]
 fn refresh_masks(shares: &mut Shares, rng: &mut ChaCha20Rng) {
     for i in 1..SHARE_COUNT {
         let temp = next_u128(rng);
@@ -99,7 +110,19 @@ mod tests {
     use rand_chacha::rand_core::SeedableRng;
 
     #[test]
-    fn squaring() {
+    fn linear_addition() {
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
+
+        let a = 15;
+        let b = 45;
+
+        let shares = share_addition(split(a, &mut rng), split(b, &mut rng));
+
+        assert_eq!(merge(shares), a ^ b);
+    }
+
+    #[test]
+    fn linear_squaring() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let a = 5;
@@ -110,7 +133,7 @@ mod tests {
     }
 
     #[test]
-    fn double_square() {
+    fn linear_double_square() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let a = 5;
@@ -121,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn quadruple_square() {
+    fn linear_quadruple_square() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let a = 5;
@@ -135,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn multiplication() {
+    fn linear_multiplication() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let a = 15;
