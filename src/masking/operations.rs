@@ -1,5 +1,4 @@
 use crate::masking::{next_u128, Shares, SHARE_COUNT};
-use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
 
 #[inline]
@@ -19,7 +18,7 @@ fn share_square(mut shares: Shares, squares: u32) -> Shares {
     assert_ne!(squares, 0);
 
     for i in 0..SHARE_COUNT {
-        for square in 0..squares {
+        for _ in 0..squares {
             shares[i] = byte_square_u128(shares[i]);
         }
     }

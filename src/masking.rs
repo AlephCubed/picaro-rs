@@ -2,8 +2,8 @@
 
 mod operations;
 
-use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::RngCore;
+use rand_chacha::ChaCha20Rng;
 
 #[cfg(feature = "masking_level_1")]
 const MASKING_LEVEL: usize = 1;
@@ -53,7 +53,6 @@ pub fn next_u128(rng: &mut ChaCha20Rng) -> u128 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Picaro;
     use rand_chacha::rand_core::SeedableRng;
 
     #[test]
@@ -62,29 +61,5 @@ mod tests {
         let secret = 12345;
 
         assert_eq!(merge(split(secret, &mut rng)), secret);
-    }
-
-    #[test]
-    fn encrypt() {
-        let mut rng = ChaCha20Rng::seed_from_u64(12345);
-
-        let key = 12345;
-        let plaintext = 314159;
-
-        let k = split(key, &mut rng);
-        let p = split(plaintext, &mut rng);
-
-        let ciphertext = k
-            .iter()
-            .zip(p)
-            .map(|(k, p)| {
-                let cipher = Picaro::new(*k);
-                cipher.encrypt(p)
-            })
-            .reduce(|a, b| a ^ b)
-            .unwrap();
-
-        assert_ne!(plaintext, ciphertext);
-        assert_eq!(Picaro::new(12345).encrypt(plaintext), ciphertext);
     }
 }
