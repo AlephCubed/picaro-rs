@@ -1,10 +1,11 @@
 #![no_std]
 
-mod compression;
-mod expansion;
-mod key_schedule;
-mod masking;
-mod s_box;
+pub mod aes;
+pub mod compression;
+pub mod expansion;
+pub mod key_schedule;
+pub mod masking;
+pub mod s_box;
 
 use crate::compression::compression;
 use crate::expansion::expansion;
