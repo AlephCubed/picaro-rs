@@ -32,7 +32,7 @@ fn byte_square_u128(share: u128) -> u128 {
     u128::from_be_bytes(share.to_be_bytes().map(|b| byte_square(b)))
 }
 
-const AES_POLYNOMIAL: u16 = 0x1B;
+const AES_POLYNOMIAL: u16 = 0b1_0001_1011;
 
 /// Squares a byte in the AES finite field.
 #[inline]
@@ -54,7 +54,7 @@ fn byte_multiplication_u128(a: u128, b: u128) -> u128 {
     let mut a = a.to_be_bytes();
     let b = b.to_be_bytes();
 
-    for i in 0..8 {
+    for i in 0..16 {
         a[i] = byte_multiplication(a[i], b[i]);
     }
 
@@ -103,7 +103,7 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
     }
 
     for i in 0..SHARE_COUNT {
-        result[i] = a[i] & b[i];
+        result[i] = byte_multiplication_u128(a[i], b[i]);
 
         for j in 0..SHARE_COUNT {
             if i != j {
@@ -171,6 +171,14 @@ mod tests {
     use super::*;
     use crate::masking::{merge, split};
     use rand_chacha::rand_core::SeedableRng;
+
+    #[test]
+    fn test_byte_multiplication() {
+        assert_eq!(byte_multiplication(0x57, 0x83), 0xC1);
+        assert_eq!(byte_multiplication(0x57, 0x13), 0xFE);
+        assert_eq!(byte_multiplication(0x57, 0x02), 0xAE);
+        assert_eq!(byte_multiplication(0x57, 0x04), 0x47);
+    }
 
     #[test]
     fn linear_addition() {
