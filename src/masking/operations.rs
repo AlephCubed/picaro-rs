@@ -1,4 +1,4 @@
-use crate::masking::{SHARE_COUNT, Shares, next_u128};
+use crate::masking::{MASKING_LEVEL, SHARE_COUNT, Shares, next_u128};
 use rand_chacha::ChaCha20Rng;
 
 #[inline]
@@ -116,7 +116,7 @@ fn share_multiplication(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
 }
 
 /// Used in AES:
-fn share_pow_254(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
+fn aes_inversion(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
     let mut z = share_square(x, 1); // XOR of z = x^2
     refresh_masks(&mut z, rng);
     let mut y = share_multiplication(z, x, rng); // XOR of y = x^3
@@ -156,10 +156,10 @@ fn aes_affine_transformation(mut shares: Shares) -> Shares {
 }
 
 fn aes_s_box(mut shares: Shares, rng: &mut ChaCha20Rng) -> Shares {
-    shares = share_pow_254(shares, rng);
+    shares = aes_inversion(shares, rng);
     shares = aes_affine_transformation(shares);
 
-    if SHARE_COUNT % 2 == 1 {
+    if MASKING_LEVEL % 2 == 1 {
         shares[0] ^= 0x63;
     }
 
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn inversion() {
+    fn test_aes_inversion() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let first_row: [u8; 16] = [
@@ -252,13 +252,13 @@ mod tests {
         ];
 
         for i in 0..16 {
-            let result = share_pow_254(split(i, &mut rng), &mut rng);
+            let result = aes_inversion(split(i, &mut rng), &mut rng);
             assert_eq!(merge(result).to_be_bytes()[15], first_row[i as usize]);
         }
     }
 
     #[test]
-    fn aes() {
+    fn test_aes_s_box() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         let first_row: [u8; 16] = [
