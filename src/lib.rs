@@ -24,11 +24,11 @@ pub fn is_weak_key(main_key: u128) -> bool {
     )
 }
 
-pub struct Picaro<const MASKING_LEVEL: u16 = 0> {
+pub struct Picaro<const MASKING_LEVEL: usize = 0> {
     main_key: u128,
 }
 
-impl<const MASKING_LEVEL: u16> Picaro<MASKING_LEVEL> {
+impl<const MASKING_LEVEL: usize> Picaro<MASKING_LEVEL> {
     /// Creates a new Picaro object using the given key.
     /// # Panics
     /// Will panic if the key is one of Picaro's four [weak keys](is_weak_key).
