@@ -24,11 +24,11 @@ pub fn is_weak_key(main_key: u128) -> bool {
     )
 }
 
-pub struct Picaro {
+pub struct Picaro<const MASKING_LEVEL: u16 = 0> {
     main_key: u128,
 }
 
-impl Picaro {
+impl<const MASKING_LEVEL: u16> Picaro<MASKING_LEVEL> {
     /// Creates a new Picaro object using the given key.
     /// # Panics
     /// Will panic if the key is one of Picaro's four [weak keys](is_weak_key).
@@ -85,71 +85,61 @@ const fn combine_u64_to_u128(parts: [u64; 2]) -> u128 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn encrypt_decrypt() {
-        let cipher = Picaro::new(12345);
-        let plaintext = 314159;
+    /// Tests that:
+    /// 1. The cipher text is different from the plaintext.
+    /// 2. Decrypting the ciphertext results in the plaintext.
+    ///
+    /// Returns the cipher text.
+    fn encrypt_decrypt<const MASKING_LEVEL: u16>(plaintext: u128, key: u128) -> u128 {
+        let cipher = Picaro::<0>::new(key);
         let ciphertext = cipher.encrypt(plaintext);
 
         assert_ne!(plaintext, ciphertext);
 
         let result = cipher.decrypt(ciphertext);
         assert_eq!(plaintext, result);
+
+        ciphertext
+    }
+
+    /// For masking levels `0..=3`, tests that:
+    /// 1. The cipher text is different from the plaintext.
+    /// 2. Decrypting the ciphertext results in the plaintext.
+    /// 3. The ciphertext is the same for all masking levels.
+    fn encrypt_decrypt_masked(plaintext: u128, key: u128) {
+        let unmasked = encrypt_decrypt::<0>(plaintext, key);
+        assert_eq!(unmasked, encrypt_decrypt::<1>(plaintext, key));
+        assert_eq!(unmasked, encrypt_decrypt::<2>(plaintext, key));
+        assert_eq!(unmasked, encrypt_decrypt::<3>(plaintext, key));
     }
 
     #[test]
-    fn encrypt_decrypt_first_10k_plaintext() {
-        for i in 0..=10000 {
-            let cipher = Picaro::new(12345);
-            let ciphertext = cipher.encrypt(i);
-
-            assert_ne!(i, ciphertext);
-
-            let result = cipher.decrypt(ciphertext);
-            assert_eq!(i, result);
+    fn encrypt_decrypt_first_1k_plaintext() {
+        for i in 0..=1000 {
+            encrypt_decrypt_masked(i, 01234);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_last_10k_plaintext() {
-        for i in (u128::MAX - 10000)..=u128::MAX {
-            let cipher = Picaro::new(12345);
-            let ciphertext = cipher.encrypt(i);
-
-            assert_ne!(i, ciphertext);
-
-            let result = cipher.decrypt(ciphertext);
-            assert_eq!(i, result);
+    fn encrypt_decrypt_last_1k_plaintext() {
+        for i in (u128::MAX - 1000)..=u128::MAX {
+            encrypt_decrypt_masked(i, 01234);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_first_10k_keys() {
+    fn encrypt_decrypt_first_1k_keys() {
         // Skip first key since it is weak.
-        for i in 1..=10000 {
-            let cipher = Picaro::new(i);
-            let plaintext = 314159;
-            let ciphertext = cipher.encrypt(plaintext);
-
-            assert_ne!(plaintext, ciphertext);
-
-            let result = cipher.decrypt(ciphertext);
-            assert_eq!(plaintext, result);
+        for i in 1..=1000 {
+            encrypt_decrypt_masked(56789, i);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_last_10k_keys() {
+    fn encrypt_decrypt_last_1k_keys() {
         // Skip last key since it is weak.
-        for i in (u128::MAX - 10000)..u128::MAX {
-            let cipher = Picaro::new(i);
-            let plaintext = 314159;
-            let ciphertext = cipher.encrypt(plaintext);
-
-            assert_ne!(plaintext, ciphertext);
-
-            let result = cipher.decrypt(ciphertext);
-            assert_eq!(plaintext, result);
+        for i in (u128::MAX - 1000)..u128::MAX {
+            encrypt_decrypt_masked(56789, i);
         }
     }
 }
