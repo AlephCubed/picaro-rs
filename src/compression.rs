@@ -1,3 +1,5 @@
+use crate::masking::byte_ops::byte_multiplication;
+
 /// The last 6 columns of the matrix G.
 const G_LAST_SIX: [[u8; 6]; 8] = [
     [0x01, 0x01, 0x0A, 0x01, 0x09, 0x0C],
@@ -19,15 +21,13 @@ pub(crate) fn compression(state: u128) -> u64 {
     let mut result = (state as u64).to_be_bytes();
 
     for i in 0..8 {
-        result[i] = result[i].wrapping_add(
-            bytes
-                .iter()
-                .skip(8)
-                .zip(G_LAST_SIX[i])
-                .map(|(byte, g)| byte.wrapping_mul(g))
-                .reduce(|sum, e| sum.wrapping_add(e))
-                .expect("There will always be 6 elements"),
-        );
+        result[i] ^= bytes
+            .iter()
+            .skip(8)
+            .zip(G_LAST_SIX[i])
+            .map(|(byte, g)| byte_multiplication(*byte, g))
+            .reduce(|sum, e| sum ^ e)
+            .expect("There will always be 6 elements");
     }
 
     u64::from_be_bytes(result)

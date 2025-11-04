@@ -29,10 +29,10 @@ const fn t(main_key: u128) -> u128 {
     let split = split_u128_to_u32(main_key);
 
     combine_u32_to_u128([
-        split[1].wrapping_add(split[2]).wrapping_add(split[3]),
-        split[0].wrapping_add(split[2]).wrapping_add(split[3]),
-        split[0].wrapping_add(split[1]).wrapping_add(split[3]),
-        split[0].wrapping_add(split[1]).wrapping_add(split[2]),
+        split[1] ^ split[2] ^ split[3],
+        split[0] ^ split[2] ^ split[3],
+        split[0] ^ split[1] ^ split[3],
+        split[0] ^ split[1] ^ split[2],
     ])
 }
 

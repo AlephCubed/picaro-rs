@@ -37,7 +37,7 @@ pub(crate) fn byte_multiplication_u128(a: u128, b: u128) -> u128 {
 
 /// Multiplies two bytes in the AES finite field.
 #[inline]
-fn byte_multiplication(a: u8, b: u8) -> u8 {
+pub(crate) fn byte_multiplication(a: u8, b: u8) -> u8 {
     let mut result = 0u16;
 
     for i in 0..8 {

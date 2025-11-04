@@ -1,3 +1,5 @@
+use crate::masking::byte_ops::byte_multiplication;
+
 /// The last 6 columns of the matrix G, transposed.
 /// This makes it easier to perform linear combinations in the [`expansion`] function.
 const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
@@ -22,8 +24,8 @@ pub(crate) fn expansion(right: u64) -> u128 {
         result[8 + 2 + i] = bytes
             .iter()
             .zip(G_LAST_SIX_TRANSPOSED[i])
-            .map(|(byte, g)| byte.wrapping_mul(g))
-            .reduce(|sum, e| sum.wrapping_add(e))
+            .map(|(byte, g)| byte_multiplication(*byte, g))
+            .reduce(|sum, e| sum ^ e)
             .expect("There will always be 8 elements");
     }
 
