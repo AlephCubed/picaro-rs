@@ -14,9 +14,9 @@ pub(crate) fn split<const SHARE_COUNT: usize>(
     let mut result = core::array::from_fn(|_| u128::default());
     result[0] = secret;
 
-    for i in 0..(SHARE_COUNT - 1) {
+    for i in 1..SHARE_COUNT {
         let r = next_u128(rng);
-        result[i as usize + 1] = r;
+        result[i] = r;
         result[0] ^= r;
     }
 
