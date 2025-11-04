@@ -1,4 +1,4 @@
-use crate::masking::byte_ops::byte_multiplication;
+use crate::masking::byte_ops::{byte_mult, PICARO_EX};
 
 /// The last 6 columns of the matrix G.
 const G_LAST_SIX: [[u8; 6]; 8] = [
@@ -25,7 +25,7 @@ pub(crate) fn compression(state: u128) -> u64 {
             .iter()
             .skip(8)
             .zip(G_LAST_SIX[i])
-            .map(|(byte, g)| byte_multiplication(*byte, g))
+            .map(|(byte, g)| byte_mult::<PICARO_EX>(*byte, g))
             .reduce(|sum, e| sum ^ e)
             .expect("There will always be 6 elements");
     }
