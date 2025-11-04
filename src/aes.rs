@@ -1,24 +1,29 @@
 //! A temporary holding place for AES masking.
 
 use crate::masking::byte_ops::AES_S_BOX;
+use crate::masking::refresh_masks;
 use crate::masking::share_ops::{share_mult, share_square};
-use crate::masking::{refresh_masks, Shares, MASKING_LEVEL, SHARE_COUNT};
 use rand_chacha::ChaCha20Rng;
 
 /// Used in AES:
-fn aes_inversion(x: Shares, rng: &mut ChaCha20Rng) -> Shares {
-    let mut z = share_square::<AES_S_BOX>(x, 1); // XOR of z = x^2
+fn aes_inversion<const SHARE_COUNT: usize>(
+    x: [u128; SHARE_COUNT],
+    rng: &mut ChaCha20Rng,
+) -> [u128; SHARE_COUNT] {
+    let mut z = share_square::<AES_S_BOX, SHARE_COUNT>(x, 1); // XOR of z = x^2
     refresh_masks(&mut z, rng);
-    let mut y = share_mult::<AES_S_BOX>(z, x, rng); // XOR of y = x^3
-    let mut w = share_square::<AES_S_BOX>(y, 2); // XOR of w = x^12
+    let mut y = share_mult::<AES_S_BOX, SHARE_COUNT>(z, x, rng); // XOR of y = x^3
+    let mut w = share_square::<AES_S_BOX, SHARE_COUNT>(y, 2); // XOR of w = x^12
     refresh_masks(&mut w, rng);
-    y = share_mult::<AES_S_BOX>(y, w, rng); // XOR of y = x^15
-    y = share_square::<AES_S_BOX>(y, 4); // XOR of y = x^240
-    y = share_mult::<AES_S_BOX>(y, w, rng); // XOR of y = x^252
-    share_mult::<AES_S_BOX>(y, z, rng) // XOR of y = x^254
+    y = share_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^15
+    y = share_square::<AES_S_BOX, SHARE_COUNT>(y, 4); // XOR of y = x^240
+    y = share_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^252
+    share_mult::<AES_S_BOX, SHARE_COUNT>(y, z, rng) // XOR of y = x^254
 }
 
-fn aes_affine_transformation(mut shares: Shares) -> Shares {
+fn aes_affine_transformation<const SHARE_COUNT: usize>(
+    mut shares: [u128; SHARE_COUNT],
+) -> [u128; SHARE_COUNT] {
     for i in 0..SHARE_COUNT {
         let mut bytes = shares[i].to_be_bytes();
 
@@ -36,11 +41,14 @@ fn aes_affine_transformation(mut shares: Shares) -> Shares {
     shares
 }
 
-fn aes_s_box(mut shares: Shares, rng: &mut ChaCha20Rng) -> Shares {
+fn aes_s_box<const SHARE_COUNT: usize>(
+    mut shares: [u128; SHARE_COUNT],
+    rng: &mut ChaCha20Rng,
+) -> [u128; SHARE_COUNT] {
     shares = aes_inversion(shares, rng);
     shares = aes_affine_transformation(shares);
 
-    if MASKING_LEVEL % 2 == 1 {
+    if (SHARE_COUNT - 1) % 2 == 1 {
         shares[0] ^= 0x63;
     }
 
@@ -63,7 +71,7 @@ mod tests {
         ];
 
         for i in 0..16 {
-            let result = aes_inversion(split(i, &mut rng), &mut rng);
+            let result = aes_inversion::<2>(split(i, &mut rng), &mut rng);
             assert_eq!(merge(result).to_be_bytes()[15], first_row[i as usize]);
         }
     }
@@ -78,7 +86,7 @@ mod tests {
         ];
 
         for i in 0..16 {
-            let result = aes_s_box(split(i, &mut rng), &mut rng);
+            let result = aes_s_box::<2>(split(i, &mut rng), &mut rng);
             assert_eq!(merge(result).to_be_bytes()[15], first_row[i as usize]);
         }
     }

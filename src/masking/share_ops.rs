@@ -1,11 +1,14 @@
 //! Mathematical operations performed on shares.
 
 use crate::masking::byte_ops::{byte_mult_u128, byte_square_u128};
-use crate::masking::{next_u128, Shares, SHARE_COUNT};
+use crate::masking::next_u128;
 use rand_chacha::ChaCha20Rng;
 
 #[inline]
-fn share_addition(mut a: Shares, b: Shares) -> Shares {
+fn share_addition<const SHARE_COUNT: usize>(
+    mut a: [u128; SHARE_COUNT],
+    b: [u128; SHARE_COUNT],
+) -> [u128; SHARE_COUNT] {
     for i in 0..SHARE_COUNT {
         a[i] ^= b[i];
     }
@@ -17,7 +20,10 @@ fn share_addition(mut a: Shares, b: Shares) -> Shares {
 /// # Panics
 /// Will panic if `multiple_of_two` is zero.
 #[inline]
-pub(crate) fn share_square<const PX: u16>(mut shares: Shares, squares: u32) -> Shares {
+pub(crate) fn share_square<const PX: u16, const SHARE_COUNT: usize>(
+    mut shares: [u128; SHARE_COUNT],
+    squares: u32,
+) -> [u128; SHARE_COUNT] {
     assert_ne!(squares, 0);
 
     for i in 0..SHARE_COUNT {
@@ -29,9 +35,14 @@ pub(crate) fn share_square<const PX: u16>(mut shares: Shares, squares: u32) -> S
     shares
 }
 
-pub(crate) fn share_mult<const PX: u16>(a: Shares, b: Shares, rng: &mut ChaCha20Rng) -> Shares {
-    let mut rng_table: [Shares; SHARE_COUNT] = Default::default();
-    let mut result = Shares::default();
+pub(crate) fn share_mult<const PX: u16, const SHARE_COUNT: usize>(
+    a: [u128; SHARE_COUNT],
+    b: [u128; SHARE_COUNT],
+    rng: &mut ChaCha20Rng,
+) -> [u128; SHARE_COUNT] {
+    let mut rng_table: [[u128; SHARE_COUNT]; SHARE_COUNT] =
+        core::array::from_fn(|_| core::array::from_fn(|_| u128::default()));
+    let mut result = core::array::from_fn(|_| u128::default());
 
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {
@@ -71,7 +82,7 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_addition(split(a, &mut rng), split(b, &mut rng));
+                let shares = share_addition::<2>(split(a, &mut rng), split(b, &mut rng));
 
                 assert_eq!(merge(shares), a ^ b);
             }
@@ -83,7 +94,7 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX>(split(i, &mut rng), 1);
+            let shares = share_square::<PX, 2>(split(i, &mut rng), 1);
 
             assert_eq!(merge(shares), byte_square_u128::<PX>(i));
         }
@@ -94,7 +105,7 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX>(split(i, &mut rng), 2);
+            let shares = share_square::<PX, 2>(split(i, &mut rng), 2);
 
             assert_eq!(
                 merge(shares),
@@ -108,7 +119,7 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX>(split(i, &mut rng), 3);
+            let shares = share_square::<PX, 2>(split(i, &mut rng), 3);
 
             assert_eq!(
                 merge(shares),
@@ -123,7 +134,7 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_mult::<PX>(split(a, &mut rng), split(b, &mut rng), &mut rng);
+                let shares = share_mult::<PX, 2>(split(a, &mut rng), split(b, &mut rng), &mut rng);
 
                 assert_eq!(merge(shares), byte_mult_u128::<PX>(a, b));
             }

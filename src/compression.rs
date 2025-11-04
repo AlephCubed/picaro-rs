@@ -1,4 +1,4 @@
-use crate::masking::byte_ops::{byte_mult, PICARO_EX};
+use crate::masking::byte_ops::{PICARO_EX, byte_mult};
 
 /// The last 6 columns of the matrix G.
 const G_LAST_SIX: [[u8; 6]; 8] = [
