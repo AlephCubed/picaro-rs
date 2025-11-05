@@ -1,16 +1,15 @@
-//! Mathematical operation performed on bytes modulo the AES polynomial.
+//! Mathematical operation performed on bytes GF(2^8).
 
 pub(crate) const AES_S_BOX: u16 = 0b1_0001_1011;
 pub(crate) const PICARO_EC: u16 = 0b1_0001_1101;
-pub(crate) const PICARO_S_BOX: u16 = 0b1_0001_1101;
 
-/// Squares all the bytes individually in the AES finite field.
+/// Squares all the bytes individually in the given finite field.
 #[inline]
 pub(crate) fn byte_square_u128<const PX: u16>(share: u128) -> u128 {
     u128::from_be_bytes(share.to_be_bytes().map(|b| byte_square::<PX>(b)))
 }
 
-/// Squares a byte in the AES finite field.
+/// Squares a byte in the given finite field.
 #[inline]
 fn byte_square<const PX: u16>(byte: u8) -> u8 {
     let mut result = 0u16;
@@ -24,7 +23,7 @@ fn byte_square<const PX: u16>(byte: u8) -> u8 {
     byte_reduce::<PX>(result)
 }
 
-/// Squares all the bytes individually in the AES finite field.
+/// Squares all the bytes individually in the given finite field.
 #[inline]
 pub(crate) fn byte_mult_u128<const PX: u16>(a: u128, b: u128) -> u128 {
     let mut a = a.to_be_bytes();
@@ -37,7 +36,7 @@ pub(crate) fn byte_mult_u128<const PX: u16>(a: u128, b: u128) -> u128 {
     u128::from_be_bytes(a)
 }
 
-/// Multiplies two bytes in the AES finite field.
+/// Multiplies two bytes in the given finite field.
 #[inline]
 pub(crate) fn byte_mult<const PX: u16>(a: u8, b: u8) -> u8 {
     let mut result = 0u16;
@@ -51,7 +50,6 @@ pub(crate) fn byte_mult<const PX: u16>(a: u8, b: u8) -> u8 {
     byte_reduce::<PX>(result)
 }
 
-/// Reduce using `x^8 = x^4 + x^3 + x + 1`.
 /// We only need to go up to 14 because the maximum value is `x^7` in an 8-bit number.
 #[inline]
 fn byte_reduce<const PX: u16>(mut byte: u16) -> u8 {
