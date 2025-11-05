@@ -71,7 +71,7 @@ pub(crate) fn share_mult<const PX: u16, const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::masking::{merge, split};
+    use crate::masking::{merge_u128, split_u128};
     use rand_chacha::rand_core::SeedableRng;
 
     const PX: u16 = crate::masking::byte_ops::AES_S_BOX;
@@ -82,9 +82,9 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_addition::<2>(split(a, &mut rng), split(b, &mut rng));
+                let shares = share_addition::<2>(split_u128(a, &mut rng), split_u128(b, &mut rng));
 
-                assert_eq!(merge(shares), a ^ b);
+                assert_eq!(merge_u128(shares), a ^ b);
             }
         }
     }
@@ -94,9 +94,9 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX, 2>(split(i, &mut rng), 1);
+            let shares = share_square::<PX, 2>(split_u128(i, &mut rng), 1);
 
-            assert_eq!(merge(shares), byte_square_u128::<PX>(i));
+            assert_eq!(merge_u128(shares), byte_square_u128::<PX>(i));
         }
     }
 
@@ -105,10 +105,10 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX, 2>(split(i, &mut rng), 2);
+            let shares = share_square::<PX, 2>(split_u128(i, &mut rng), 2);
 
             assert_eq!(
-                merge(shares),
+                merge_u128(shares),
                 byte_square_u128::<PX>(byte_square_u128::<PX>(i))
             );
         }
@@ -119,10 +119,10 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_square::<PX, 2>(split(i, &mut rng), 3);
+            let shares = share_square::<PX, 2>(split_u128(i, &mut rng), 3);
 
             assert_eq!(
-                merge(shares),
+                merge_u128(shares),
                 byte_square_u128::<PX>(byte_square_u128::<PX>(byte_square_u128::<PX>(i)))
             );
         }
@@ -134,9 +134,10 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_mult::<PX, 2>(split(a, &mut rng), split(b, &mut rng), &mut rng);
+                let shares =
+                    share_mult::<PX, 2>(split_u128(a, &mut rng), split_u128(b, &mut rng), &mut rng);
 
-                assert_eq!(merge(shares), byte_mult_u128::<PX>(a, b));
+                assert_eq!(merge_u128(shares), byte_mult_u128::<PX>(a, b));
             }
         }
     }

@@ -1,4 +1,4 @@
-use crate::masking::byte_ops::{PICARO_EX, byte_mult};
+use crate::masking::byte_ops::{byte_mult, PICARO_EC};
 
 /// The last 6 columns of the matrix G, transposed.
 /// This makes it easier to perform linear combinations in the [`expansion`] function.
@@ -10,6 +10,18 @@ const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
     [0x9, 0x1, 0xA, 0x1, 0x1, 0x5, 0x6, 0xC],
     [0xC, 0x9, 0x1, 0xA, 0x1, 0x1, 0x5, 0x6],
 ];
+
+pub(crate) fn share_expansion<const SHARE_COUNT: usize>(
+    shares: [u64; SHARE_COUNT],
+) -> [u128; SHARE_COUNT] {
+    let mut result = core::array::from_fn(|_| u128::default());
+
+    for i in 0..SHARE_COUNT {
+        result[i] = expansion(shares[i]);
+    }
+
+    result
+}
 
 // Todo Performance might be bad.
 /// Expands the right side into a 112-bit number.
@@ -24,7 +36,7 @@ pub(crate) fn expansion(right: u64) -> u128 {
         result[8 + 2 + i] = bytes
             .iter()
             .zip(G_LAST_SIX_TRANSPOSED[i])
-            .map(|(byte, g)| byte_mult::<PICARO_EX>(*byte, g))
+            .map(|(byte, g)| byte_mult::<PICARO_EC>(*byte, g))
             .reduce(|sum, e| sum ^ e)
             .expect("There will always be 8 elements");
     }
@@ -35,6 +47,9 @@ pub(crate) fn expansion(right: u64) -> u128 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masking::{merge_u128, split_u64};
+    use rand_chacha::rand_core::SeedableRng;
+    use rand_chacha::ChaCha20Rng;
 
     #[test]
     #[ignore] //Todo
@@ -63,5 +78,23 @@ mod tests {
                 C*0 + 9*1 + 1*2 + A*3 + 1*4 + 1*5 + 5*6 + 6*7,
             ]
         );
+    }
+
+    fn test_masked_expansion<const SHARE_COUNT: usize>(input: u64, rng: &mut ChaCha20Rng) -> u128 {
+        let shares = split_u64::<SHARE_COUNT>(input, rng);
+        let expanded = share_expansion(shares);
+        merge_u128(expanded)
+    }
+
+    #[test]
+    fn masked() {
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
+
+        for i in 0..256 {
+            let unmasked = test_masked_expansion::<1>(i, &mut rng);
+            assert_eq!(unmasked, test_masked_expansion::<2>(i, &mut rng));
+            assert_eq!(unmasked, test_masked_expansion::<3>(i, &mut rng));
+            assert_eq!(unmasked, test_masked_expansion::<4>(i, &mut rng));
+        }
     }
 }

@@ -1,7 +1,7 @@
 //! Mathematical operation performed on bytes modulo the AES polynomial.
 
 pub(crate) const AES_S_BOX: u16 = 0b1_0001_1011;
-pub(crate) const PICARO_EX: u16 = 0b1_0001_1101;
+pub(crate) const PICARO_EC: u16 = 0b1_0001_1101;
 pub(crate) const PICARO_S_BOX: u16 = 0b1_0001_1101;
 
 /// Squares all the bytes individually in the AES finite field.

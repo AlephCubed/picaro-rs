@@ -58,7 +58,7 @@ fn aes_s_box<const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::masking::{merge, split};
+    use crate::masking::{merge_u128, split_u128};
     use rand_chacha::rand_core::SeedableRng;
 
     #[test]
@@ -71,8 +71,8 @@ mod tests {
         ];
 
         for i in 0..16 {
-            let result = aes_inversion::<2>(split(i, &mut rng), &mut rng);
-            assert_eq!(merge(result).to_be_bytes()[15], first_row[i as usize]);
+            let result = aes_inversion::<2>(split_u128(i, &mut rng), &mut rng);
+            assert_eq!(merge_u128(result).to_be_bytes()[15], first_row[i as usize]);
         }
     }
 
@@ -86,8 +86,8 @@ mod tests {
         ];
 
         for i in 0..16 {
-            let result = aes_s_box::<2>(split(i, &mut rng), &mut rng);
-            assert_eq!(merge(result).to_be_bytes()[15], first_row[i as usize]);
+            let result = aes_s_box::<2>(split_u128(i, &mut rng), &mut rng);
+            assert_eq!(merge_u128(result).to_be_bytes()[15], first_row[i as usize]);
         }
     }
 }
