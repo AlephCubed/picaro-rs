@@ -1,8 +1,8 @@
 pub mod byte_ops;
 pub mod share_ops;
 
-use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
+use rand_chacha::rand_core::RngCore;
 
 #[inline]
 pub(crate) fn split_u128<const SHARE_COUNT: usize>(

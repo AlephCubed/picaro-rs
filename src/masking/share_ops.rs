@@ -5,7 +5,7 @@ use crate::masking::next_u128;
 use rand_chacha::ChaCha20Rng;
 
 #[inline]
-fn share_addition<const SHARE_COUNT: usize>(
+fn share_add<const SHARE_COUNT: usize>(
     mut a: [u128; SHARE_COUNT],
     b: [u128; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
@@ -82,7 +82,7 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_addition::<2>(split_u128(a, &mut rng), split_u128(b, &mut rng));
+                let shares = share_add::<2>(split_u128(a, &mut rng), split_u128(b, &mut rng));
 
                 assert_eq!(merge_u128(shares), a ^ b);
             }

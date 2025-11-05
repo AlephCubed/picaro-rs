@@ -1,4 +1,4 @@
-use crate::masking::byte_ops::{byte_mult, PICARO_EC};
+use crate::masking::byte_ops::{PICARO_EC, byte_mult};
 
 /// The last 6 columns of the matrix G.
 const G_LAST_SIX: [[u8; 6]; 8] = [
@@ -49,8 +49,8 @@ pub(crate) fn compression(state: u128) -> u64 {
 mod tests {
     use super::*;
     use crate::masking::{merge_u64, split_u128};
-    use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaCha20Rng;
+    use rand_chacha::rand_core::SeedableRng;
 
     #[test]
     #[ignore] //Todo
@@ -93,7 +93,12 @@ mod tests {
         input: u128,
         rng: &mut ChaCha20Rng,
     ) -> u64 {
-        let shares = split_u128::<SHARE_COUNT>(input, rng);
+        let mut shares = split_u128::<SHARE_COUNT>(input << 16, rng);
+
+        for i in 0..SHARE_COUNT {
+            shares[i] >>= 16;
+        }
+
         let compressed = share_compression(shares);
         merge_u64(compressed)
     }

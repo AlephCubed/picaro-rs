@@ -1,4 +1,4 @@
-use crate::masking::byte_ops::{byte_mult, PICARO_EC};
+use crate::masking::byte_ops::{PICARO_EC, byte_mult};
 
 /// The last 6 columns of the matrix G, transposed.
 /// This makes it easier to perform linear combinations in the [`expansion`] function.
@@ -48,8 +48,8 @@ pub(crate) fn expansion(right: u64) -> u128 {
 mod tests {
     use super::*;
     use crate::masking::{merge_u128, split_u64};
-    use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaCha20Rng;
+    use rand_chacha::rand_core::SeedableRng;
 
     #[test]
     #[ignore] //Todo
