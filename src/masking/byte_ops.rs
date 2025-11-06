@@ -50,9 +50,9 @@ pub(crate) fn byte_mult<const PX: u16>(a: u8, b: u8) -> u8 {
     byte_reduce::<PX>(result)
 }
 
-/// We only need to go up to 14 because the maximum value is `x^7` in an 8-bit number.
 #[inline]
 fn byte_reduce<const PX: u16>(mut byte: u16) -> u8 {
+    // We only need to go up to 14 because the maximum value is `x^7` in an 8-bit number.
     for i in (8..=14).rev() {
         if (byte >> i) & 1 == 1 {
             byte ^= PX << (i - 8);

@@ -27,7 +27,7 @@ pub(crate) fn share_compression<const SHARE_COUNT: usize>(
 // Todo Performance might be bad.
 /// Compresses the state into a 64-bit number.
 pub(crate) fn compression(state: u128) -> u64 {
-    assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
+    debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
     let bytes = state.to_be_bytes();
     let mut result = (state as u64).to_be_bytes();

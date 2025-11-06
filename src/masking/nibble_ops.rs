@@ -5,7 +5,7 @@ pub(crate) const PICARO_S_BOX: u8 = 0b11001;
 /// Squares a nibble in the given finite field.
 #[inline]
 pub(crate) fn nibble_square<const PX: u8>(nibble: u8) -> u8 {
-    assert_eq!(nibble >> 4, 0, "Must be an 4-bit number.");
+    debug_assert_eq!(nibble >> 4, 0, "Must be an 4-bit number.");
 
     let mut result = 0u8;
 
@@ -21,8 +21,8 @@ pub(crate) fn nibble_square<const PX: u8>(nibble: u8) -> u8 {
 /// Multiplies two nibble in the given field.
 #[inline]
 pub(crate) fn nibble_mult<const PX: u8>(a: u8, b: u8) -> u8 {
-    assert_eq!(a >> 4, 0, "`a` must be an 4-bit number.");
-    assert_eq!(b >> 4, 0, "`b` must be an 4-bit number.");
+    debug_assert_eq!(a >> 4, 0, "`a` must be an 4-bit number.");
+    debug_assert_eq!(b >> 4, 0, "`b` must be an 4-bit number.");
 
     let mut result = 0u8;
 
@@ -35,9 +35,9 @@ pub(crate) fn nibble_mult<const PX: u8>(a: u8, b: u8) -> u8 {
     nibble_reduce::<PX>(result)
 }
 
-/// We only need to go up to 6 because the maximum value is `x^3` in an 4-bit number.
 #[inline]
 fn nibble_reduce<const PX: u8>(mut byte: u8) -> u8 {
+    // We only need to go up to 6 because the maximum value is `x^3` in an 4-bit number.
     for i in (4..=6).rev() {
         if (byte >> i) & 1 == 1 {
             byte ^= PX << (i - 4);

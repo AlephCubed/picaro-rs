@@ -23,7 +23,7 @@ const S_BOX_FLAT: [u8; 256] = [
 /// # Panics
 /// If the number is larger than 112-bits.
 pub(crate) fn s_box(state: u128) -> u128 {
-    assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
+    debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
     let mut bytes = state.to_be_bytes();
 

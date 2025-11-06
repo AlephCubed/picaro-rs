@@ -24,7 +24,7 @@ pub(crate) fn share_square<const PX: u16, const SHARE_COUNT: usize>(
     mut shares: [u128; SHARE_COUNT],
     squares: u32,
 ) -> [u128; SHARE_COUNT] {
-    assert_ne!(squares, 0);
+    debug_assert_ne!(squares, 0);
 
     for i in 0..SHARE_COUNT {
         for _ in 0..squares {

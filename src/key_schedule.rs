@@ -11,7 +11,7 @@ const OMEGA: [u32; 11] = [1, 16, 17, 32, 33, 85, 86, 101, 102, 117, 118];
 /// Will panic if the round number is greater or equal to 12.
 #[inline]
 const fn extended_key(round: u8, main_key: u128) -> u128 {
-    assert!(round < 12, "Round number must be less than 12.");
+    debug_assert!(round < 12, "Round number must be less than 12.");
 
     match round {
         0 => main_key,
