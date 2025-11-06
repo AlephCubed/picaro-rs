@@ -1,4 +1,5 @@
 pub mod byte_ops;
+pub mod nibble_ops;
 pub mod share_ops;
 
 use rand_chacha::ChaCha20Rng;
