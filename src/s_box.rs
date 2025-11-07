@@ -1,4 +1,6 @@
 use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
+use crate::masking::share_nibble_ops::{share_nibble_mult, share_nibble_square};
+use rand_chacha::ChaCha20Rng;
 
 /// A flattened representation of the S-Box.
 #[rustfmt::skip]
@@ -49,9 +51,43 @@ fn sub_field_s_box(byte: u8) -> u8 {
     (x_out << 4) ^ y_out
 }
 
+fn masked_s_box<const SHARE_COUNT: usize>(
+    shares: [u128; SHARE_COUNT],
+    rng: &mut ChaCha20Rng,
+) -> [u128; SHARE_COUNT] {
+    let y = shares.map(|s| s >> 4);
+    let x = shares.map(|s| s & 0b1111);
+
+    let mut x_out = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(y, x, rng);
+
+    let x3 = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(
+        share_nibble_square::<PICARO_S_BOX, SHARE_COUNT>(x),
+        x,
+        rng,
+    );
+
+    let y3 = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(
+        share_nibble_square::<PICARO_S_BOX, SHARE_COUNT>(y),
+        y,
+        rng,
+    );
+
+    let x3_shifted = x3.map(|s| s ^ 0x2);
+    let y3_shifted = y3.map(|s| s ^ 0x4);
+    let y_out = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(x3_shifted, y3_shifted, rng);
+
+    for i in 0..SHARE_COUNT {
+        x_out[i] = (x_out[i] << 4) ^ y_out[i];
+    }
+
+    x_out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masking::{merge_u128, split_u128};
+    use rand_chacha::rand_core::SeedableRng;
 
     #[test]
     fn min_value() {
@@ -84,7 +120,17 @@ mod tests {
     #[test]
     fn fields_match() {
         for i in 0..u8::MAX {
-            assert_eq!(S_BOX_FLAT[i as usize], sub_field_s_box(i), "failed for {i}");
+            assert_eq!(sub_field_s_box(i), S_BOX_FLAT[i as usize]);
+        }
+    }
+
+    #[test]
+    fn masked_matches() {
+        let mut rng = ChaCha20Rng::seed_from_u64(12345);
+
+        for i in 0..256 {
+            let result = masked_s_box::<2>(split_u128(i, &mut rng), &mut rng);
+            assert_eq!(merge_u128(result).to_be_bytes()[15], S_BOX_FLAT[i as usize]);
         }
     }
 }
