@@ -1,3 +1,5 @@
+use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
+
 /// A flattened representation of the S-Box.
 #[rustfmt::skip]
 const S_BOX_FLAT: [u8; 256] = [
@@ -34,6 +36,19 @@ pub(crate) fn s_box(state: u128) -> u128 {
     u128::from_be_bytes(bytes)
 }
 
+fn sub_field_s_box(byte: u8) -> u8 {
+    let y = byte >> 4;
+    let x = byte & 0b1111;
+
+    let x_out = nibble_mult::<PICARO_S_BOX>(x, y);
+
+    let x3 = nibble_mult::<PICARO_S_BOX>(nibble_square::<PICARO_S_BOX>(x), x);
+    let y3 = nibble_mult::<PICARO_S_BOX>(nibble_square::<PICARO_S_BOX>(y), y);
+    let y_out = nibble_mult::<PICARO_S_BOX>(x3 ^ 0x02, y3 ^ 0x04);
+
+    (x_out << 4) ^ y_out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +79,12 @@ mod tests {
     #[should_panic(expected = "Must be an 112-bit number.")]
     fn over_112_bits() {
         s_box(u128::MAX);
+    }
+
+    #[test]
+    fn fields_match() {
+        for i in 0..u8::MAX {
+            assert_eq!(S_BOX_FLAT[i as usize], sub_field_s_box(i), "failed for {i}");
+        }
     }
 }
