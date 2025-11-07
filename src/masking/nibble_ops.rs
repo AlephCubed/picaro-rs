@@ -2,6 +2,26 @@
 
 pub(crate) const PICARO_S_BOX: u8 = 0b11001;
 
+#[macro_export]
+macro_rules! nibble_op {
+    ($byte:expr, $func:path) => {
+        ($func($byte & 0b1111) << 4) ^ $func($byte >> 4)
+    };
+    ($a:expr, $b:expr, $func:path) => {
+        ($func($a & 0b1111, $b & 0b1111) << 4) ^ $func($a >> 4, $b >> 4)
+    };
+}
+
+/// Squares all the bytes individually in the given finite field.
+#[inline]
+pub(crate) fn nibble_square_u128<const PX: u8>(share: u128) -> u128 {
+    u128::from_be_bytes(
+        share
+            .to_be_bytes()
+            .map(|b| nibble_op!(b, nibble_square::<PX>)),
+    )
+}
+
 /// Squares a nibble in the given finite field.
 #[inline]
 pub(crate) fn nibble_square<const PX: u8>(nibble: u8) -> u8 {
@@ -16,6 +36,19 @@ pub(crate) fn nibble_square<const PX: u8>(nibble: u8) -> u8 {
     }
 
     nibble_reduce::<PX>(result)
+}
+
+/// Squares all the bytes individually in the given finite field.
+#[inline]
+pub(crate) fn nibble_mult_u128<const PX: u8>(a: u128, b: u128) -> u128 {
+    let mut a = a.to_be_bytes();
+    let b = b.to_be_bytes();
+
+    for i in 0..16 {
+        a[i] = nibble_op!(a[i], b[i], nibble_mult::<PX>);
+    }
+
+    u128::from_be_bytes(a)
 }
 
 /// Multiplies two nibble in the given field.

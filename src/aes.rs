@@ -2,7 +2,7 @@
 
 use crate::masking::byte_ops::AES_S_BOX;
 use crate::masking::refresh_masks;
-use crate::masking::share_ops::{share_mult, share_square};
+use crate::masking::share_byte_ops::{share_byte_mult, share_byte_square};
 use rand_chacha::ChaCha20Rng;
 
 /// Used in AES:
@@ -10,15 +10,15 @@ fn aes_inversion<const SHARE_COUNT: usize>(
     x: [u128; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
-    let mut z = share_square::<AES_S_BOX, SHARE_COUNT>(x, 1); // XOR of z = x^2
+    let mut z = share_byte_square::<AES_S_BOX, SHARE_COUNT>(x, 1); // XOR of z = x^2
     refresh_masks(&mut z, rng);
-    let mut y = share_mult::<AES_S_BOX, SHARE_COUNT>(z, x, rng); // XOR of y = x^3
-    let mut w = share_square::<AES_S_BOX, SHARE_COUNT>(y, 2); // XOR of w = x^12
+    let mut y = share_byte_mult::<AES_S_BOX, SHARE_COUNT>(z, x, rng); // XOR of y = x^3
+    let mut w = share_byte_square::<AES_S_BOX, SHARE_COUNT>(y, 2); // XOR of w = x^12
     refresh_masks(&mut w, rng);
-    y = share_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^15
-    y = share_square::<AES_S_BOX, SHARE_COUNT>(y, 4); // XOR of y = x^240
-    y = share_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^252
-    share_mult::<AES_S_BOX, SHARE_COUNT>(y, z, rng) // XOR of y = x^254
+    y = share_byte_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^15
+    y = share_byte_square::<AES_S_BOX, SHARE_COUNT>(y, 4); // XOR of y = x^240
+    y = share_byte_mult::<AES_S_BOX, SHARE_COUNT>(y, w, rng); // XOR of y = x^252
+    share_byte_mult::<AES_S_BOX, SHARE_COUNT>(y, z, rng) // XOR of y = x^254
 }
 
 fn aes_affine_transformation<const SHARE_COUNT: usize>(
