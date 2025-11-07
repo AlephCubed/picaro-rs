@@ -10,14 +10,9 @@ use rand_chacha::ChaCha20Rng;
 #[inline]
 pub(crate) fn share_nibble_square<const PX: u8, const SHARE_COUNT: usize>(
     mut shares: [u128; SHARE_COUNT],
-    squares: u32,
 ) -> [u128; SHARE_COUNT] {
-    debug_assert_ne!(squares, 0);
-
     for i in 0..SHARE_COUNT {
-        for _ in 0..squares {
-            shares[i] = nibble_square_u128::<PX>(shares[i]);
-        }
+        shares[i] = nibble_square_u128::<PX>(shares[i]);
     }
 
     shares
@@ -82,37 +77,9 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..255 {
-            let shares = share_nibble_square::<PX, 2>(split_u128(i, &mut rng), 1);
+            let shares = share_nibble_square::<PX, 2>(split_u128(i, &mut rng));
 
             assert_eq!(merge_u128(shares), nibble_square_u128::<PX>(i));
-        }
-    }
-
-    #[test]
-    fn linear_double_square() {
-        let mut rng = ChaCha20Rng::seed_from_u64(12345);
-
-        for i in 0..255 {
-            let shares = share_nibble_square::<PX, 2>(split_u128(i, &mut rng), 2);
-
-            assert_eq!(
-                merge_u128(shares),
-                nibble_square_u128::<PX>(nibble_square_u128::<PX>(i))
-            );
-        }
-    }
-
-    #[test]
-    fn linear_quadruple_square() {
-        let mut rng = ChaCha20Rng::seed_from_u64(12345);
-
-        for i in 0..255 {
-            let shares = share_nibble_square::<PX, 2>(split_u128(i, &mut rng), 3);
-
-            assert_eq!(
-                merge_u128(shares),
-                nibble_square_u128::<PX>(nibble_square_u128::<PX>(nibble_square_u128::<PX>(i)))
-            );
         }
     }
 

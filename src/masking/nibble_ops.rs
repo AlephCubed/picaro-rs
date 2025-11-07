@@ -4,10 +4,10 @@ pub(crate) const PICARO_S_BOX: u8 = 0b11001;
 
 #[macro_export]
 macro_rules! nibble_op {
-    ($byte:expr, $func:path) => {
+    ($func:path, $byte:expr) => {
         ($func($byte & 0b1111) << 4) ^ $func($byte >> 4)
     };
-    ($a:expr, $b:expr, $func:path) => {
+    ($func:path, $a:expr, $b:expr) => {
         ($func($a & 0b1111, $b & 0b1111) << 4) ^ $func($a >> 4, $b >> 4)
     };
 }
@@ -18,7 +18,7 @@ pub(crate) fn nibble_square_u128<const PX: u8>(share: u128) -> u128 {
     u128::from_be_bytes(
         share
             .to_be_bytes()
-            .map(|b| nibble_op!(b, nibble_square::<PX>)),
+            .map(|b| nibble_op!(nibble_square::<PX>, b)),
     )
 }
 
@@ -45,7 +45,7 @@ pub(crate) fn nibble_mult_u128<const PX: u8>(a: u128, b: u128) -> u128 {
     let b = b.to_be_bytes();
 
     for i in 0..16 {
-        a[i] = nibble_op!(a[i], b[i], nibble_mult::<PX>);
+        a[i] = nibble_op!(nibble_mult::<PX>, a[i], b[i]);
     }
 
     u128::from_be_bytes(a)
