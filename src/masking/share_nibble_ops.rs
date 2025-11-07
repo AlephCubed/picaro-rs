@@ -11,11 +11,7 @@ use rand_chacha::ChaCha20Rng;
 pub(crate) fn share_nibble_square<const PX: u8, const SHARE_COUNT: usize>(
     mut shares: [u128; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
-    for i in 0..SHARE_COUNT {
-        shares[i] = nibble_square_u128::<PX>(shares[i]);
-    }
-
-    shares
+    shares.map(nibble_square_u128::<PX>)
 }
 
 pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(

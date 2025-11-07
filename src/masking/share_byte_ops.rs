@@ -9,18 +9,18 @@ use rand_chacha::ChaCha20Rng;
 /// Will panic if `multiple_of_two` is zero.
 #[inline]
 pub(crate) fn share_byte_square<const PX: u16, const SHARE_COUNT: usize>(
-    mut shares: [u128; SHARE_COUNT],
+    shares: [u128; SHARE_COUNT],
     squares: u32,
 ) -> [u128; SHARE_COUNT] {
     debug_assert_ne!(squares, 0);
 
-    for i in 0..SHARE_COUNT {
+    shares.map(|mut s| {
         for _ in 0..squares {
-            shares[i] = byte_square_u128::<PX>(shares[i]);
+            s = byte_square_u128::<PX>(s);
         }
-    }
 
-    shares
+        s
+    })
 }
 
 pub(crate) fn share_byte_mult<const PX: u16, const SHARE_COUNT: usize>(
