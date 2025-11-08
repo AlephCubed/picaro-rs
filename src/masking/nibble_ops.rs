@@ -5,10 +5,10 @@ pub(crate) const PICARO_S_BOX: u8 = 0b11001;
 #[macro_export]
 macro_rules! nibble_op {
     ($func:path, $byte:expr) => {
-        ($func($byte & 0b1111) << 4) ^ $func($byte >> 4)
+        ($func($byte >> 4) << 4) ^ $func($byte & 0b1111)
     };
     ($func:path, $a:expr, $b:expr) => {
-        ($func($a & 0b1111, $b & 0b1111) << 4) ^ $func($a >> 4, $b >> 4)
+        ($func($a >> 4, $b >> 4) << 4) ^ $func($a & 0b1111, $b & 0b1111)
     };
 }
 

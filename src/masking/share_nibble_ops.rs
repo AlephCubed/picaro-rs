@@ -9,7 +9,7 @@ use rand_chacha::ChaCha20Rng;
 /// Will panic if `multiple_of_two` is zero.
 #[inline]
 pub(crate) fn share_nibble_square<const PX: u8, const SHARE_COUNT: usize>(
-    mut shares: [u128; SHARE_COUNT],
+    shares: [u128; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
     shares.map(nibble_square_u128::<PX>)
 }

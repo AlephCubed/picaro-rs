@@ -1,4 +1,4 @@
-use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
+use crate::masking::nibble_ops::{nibble_mult, nibble_square, PICARO_S_BOX};
 use crate::masking::share_nibble_ops::{share_nibble_mult, share_nibble_square};
 use rand_chacha::ChaCha20Rng;
 
@@ -55,10 +55,10 @@ fn masked_s_box<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
-    let y = shares.map(|s| s >> 4);
-    let x = shares.map(|s| s & 0b1111);
+    let x = shares.map(|s| s >> 4);
+    let y = shares.map(|s| s & 0b1111);
 
-    let mut x_out = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(y, x, rng);
+    let mut x_out = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(x, y, rng);
 
     let x3 = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(
         share_nibble_square::<PICARO_S_BOX, SHARE_COUNT>(x),
