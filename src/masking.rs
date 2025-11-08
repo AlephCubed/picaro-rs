@@ -3,11 +3,28 @@ pub mod nibble_ops;
 pub mod share_byte_ops;
 pub mod share_nibble_ops;
 
-use rand_chacha::rand_core::RngCore;
 use rand_chacha::ChaCha20Rng;
+use rand_chacha::rand_core::RngCore;
 
 #[inline]
 pub(crate) fn split_u128<const SHARE_COUNT: usize>(
+    secret: u128,
+    rng: &mut ChaCha20Rng,
+) -> [u128; SHARE_COUNT] {
+    let mut result = core::array::from_fn(|_| u128::default());
+    result[0] = secret;
+
+    for i in 1..SHARE_COUNT {
+        let r = next_u128(rng);
+        result[i] = r;
+        result[0] ^= r;
+    }
+
+    result
+}
+
+#[inline]
+pub(crate) fn split_u112<const SHARE_COUNT: usize>(
     secret: u128,
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
@@ -87,10 +104,22 @@ pub(crate) fn next_u112(rng: &mut ChaCha20Rng) -> u128 {
 }
 
 #[inline]
-fn share_add<const SHARE_COUNT: usize>(
+pub(crate) fn share_add_u112<const SHARE_COUNT: usize>(
     mut a: [u128; SHARE_COUNT],
     b: [u128; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
+    for i in 0..SHARE_COUNT {
+        a[i] ^= b[i];
+    }
+
+    a
+}
+
+#[inline]
+pub(crate) fn share_add_u64<const SHARE_COUNT: usize>(
+    mut a: [u64; SHARE_COUNT],
+    b: [u64; SHARE_COUNT],
+) -> [u64; SHARE_COUNT] {
     for i in 0..SHARE_COUNT {
         a[i] ^= b[i];
     }

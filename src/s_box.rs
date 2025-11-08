@@ -1,4 +1,4 @@
-use crate::masking::nibble_ops::{nibble_mult, nibble_square, PICARO_S_BOX};
+use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
 use crate::masking::share_nibble_ops::{share_nibble_mult, share_nibble_square};
 use rand_chacha::ChaCha20Rng;
 
@@ -26,7 +26,7 @@ const S_BOX_FLAT: [u8; 256] = [
 /// Applies the S-Box to a 112-bit number.
 /// # Panics
 /// If the number is larger than 112-bits.
-pub(crate) fn s_box(state: u128) -> u128 {
+fn unmasked_s_box(state: u128) -> u128 {
     debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
     let mut bytes = state.to_be_bytes();
@@ -52,10 +52,14 @@ fn sub_field_s_box(byte: u8) -> u8 {
     (x_out << 4) ^ y_out
 }
 
-fn masked_s_box<const SHARE_COUNT: usize>(
+pub(crate) fn s_box<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
+    if SHARE_COUNT == 1 {
+        return shares.map(unmasked_s_box);
+    }
+
     let y = shares.map(|s| s >> 4);
     let x = shares.map(|s| s & 0b1111);
 
@@ -87,35 +91,38 @@ fn masked_s_box<const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::masking::{merge_u128, split_u128};
+    use crate::masking::{merge_u128, split_u112};
     use rand_chacha::rand_core::SeedableRng;
 
     #[test]
     fn min_value() {
-        assert_eq!(s_box(0), 0x0808080808080808080808080808);
+        assert_eq!(unmasked_s_box(0), 0x0808080808080808080808080808);
     }
 
     #[test]
     fn max_value() {
-        assert_eq!(s_box(u128::MAX >> 16), 0x3535353535353535353535353535);
+        assert_eq!(
+            unmasked_s_box(u128::MAX >> 16),
+            0x3535353535353535353535353535
+        );
     }
 
     // First row, second column.
     #[test]
     fn one_value() {
-        assert_eq!(s_box(0x1), 0x080808080808080808080808080c);
+        assert_eq!(unmasked_s_box(0x1), 0x080808080808080808080808080c);
     }
 
     // Second row, first column.
     #[test]
     fn sixteen_value() {
-        assert_eq!(s_box(0x10), 0x080808080808080808080808080a);
+        assert_eq!(unmasked_s_box(0x10), 0x080808080808080808080808080a);
     }
 
     #[test]
     #[should_panic(expected = "Must be an 112-bit number.")]
     fn over_112_bits() {
-        s_box(u128::MAX);
+        unmasked_s_box(u128::MAX);
     }
 
     #[test]
@@ -131,7 +138,7 @@ mod tests {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..256 {
-            let result = masked_s_box::<2>(split_u128(i, &mut rng), &mut rng);
+            let result = s_box::<2>(split_u112(i, &mut rng), &mut rng);
             assert_eq!(merge_u128(result).to_be_bytes()[15], S_BOX_FLAT[i as usize]);
         }
     }

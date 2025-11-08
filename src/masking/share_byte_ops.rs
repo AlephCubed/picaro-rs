@@ -59,7 +59,7 @@ pub(crate) fn share_byte_mult<const PX: u16, const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::masking::{merge_u128, share_add, split_u128};
+    use crate::masking::{merge_u128, share_add_u112, split_u128};
     use rand_chacha::rand_core::SeedableRng;
 
     const PX: u16 = crate::masking::byte_ops::AES_S_BOX;
@@ -70,7 +70,7 @@ mod tests {
 
         for a in 0..255 {
             for b in 0..255 {
-                let shares = share_add::<2>(split_u128(a, &mut rng), split_u128(b, &mut rng));
+                let shares = share_add_u112::<2>(split_u128(a, &mut rng), split_u128(b, &mut rng));
 
                 assert_eq!(merge_u128(shares), a ^ b);
             }
