@@ -14,12 +14,16 @@ macro_rules! nibble_op {
 
 /// Squares all the bytes individually in the given finite field.
 #[inline]
-pub(crate) fn nibble_square_u128<const PX: u8>(share: u128) -> u128 {
-    u128::from_be_bytes(
-        share
-            .to_be_bytes()
-            .map(|b| nibble_op!(nibble_square::<PX>, b)),
-    )
+pub(crate) fn nibble_square_u112<const PX: u8>(share: u128) -> u128 {
+    debug_assert_eq!(share >> 112, 0, "Must be an 112-bit number.");
+
+    let mut bytes = share.to_be_bytes();
+
+    for i in 2..16 {
+        bytes[i] = nibble_op!(nibble_square::<PX>, bytes[i]);
+    }
+
+    u128::from_be_bytes(bytes)
 }
 
 /// Squares a nibble in the given finite field.
@@ -40,11 +44,14 @@ pub(crate) fn nibble_square<const PX: u8>(nibble: u8) -> u8 {
 
 /// Squares all the bytes individually in the given finite field.
 #[inline]
-pub(crate) fn nibble_mult_u128<const PX: u8>(a: u128, b: u128) -> u128 {
+pub(crate) fn nibble_mult_u112<const PX: u8>(a: u128, b: u128) -> u128 {
+    debug_assert_eq!(a >> 112, 0, "`a` must be an 112-bit number.");
+    debug_assert_eq!(b >> 112, 0, "`b` must be an 112-bit number.");
+
     let mut a = a.to_be_bytes();
     let b = b.to_be_bytes();
 
-    for i in 0..16 {
+    for i in 2..16 {
         a[i] = nibble_op!(nibble_mult::<PX>, a[i], b[i]);
     }
 
@@ -100,5 +107,23 @@ mod tests {
     #[should_panic(expected = "`b` must be an 4-bit number.")]
     fn invalid_input_mult_b() {
         nibble_mult::<PICARO_S_BOX>(0b1, 0b10000);
+    }
+
+    #[test]
+    #[should_panic(expected = "Must be an 112-bit number.")]
+    fn invalid_input_square_u112() {
+        nibble_square_u112::<PICARO_S_BOX>(u128::MAX);
+    }
+
+    #[test]
+    #[should_panic(expected = "`a` must be an 112-bit number.")]
+    fn invalid_input_mult_a_u112() {
+        nibble_mult_u112::<PICARO_S_BOX>(u128::MAX, 0b1);
+    }
+
+    #[test]
+    #[should_panic(expected = "`b` must be an 112-bit number.")]
+    fn invalid_input_mult_b_112() {
+        nibble_mult_u112::<PICARO_S_BOX>(0b1, u128::MAX);
     }
 }

@@ -3,8 +3,8 @@ pub mod nibble_ops;
 pub mod share_byte_ops;
 pub mod share_nibble_ops;
 
-use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::RngCore;
+use rand_chacha::ChaCha20Rng;
 
 #[inline]
 pub(crate) fn split_u128<const SHARE_COUNT: usize>(
@@ -15,7 +15,7 @@ pub(crate) fn split_u128<const SHARE_COUNT: usize>(
     result[0] = secret;
 
     for i in 1..SHARE_COUNT {
-        let r = next_u128(rng);
+        let r = next_u112(rng);
         result[i] = r;
         result[0] ^= r;
     }
@@ -79,6 +79,11 @@ pub(crate) fn next_u128(rng: &mut ChaCha20Rng) -> u128 {
     let a = rng.next_u64() as u128;
     let b = rng.next_u64() as u128;
     (a << 64) | b
+}
+
+#[inline]
+pub(crate) fn next_u112(rng: &mut ChaCha20Rng) -> u128 {
+    next_u128(rng) >> 16
 }
 
 #[inline]

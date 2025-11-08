@@ -1,4 +1,4 @@
-use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
+use crate::masking::nibble_ops::{nibble_mult, nibble_square, PICARO_S_BOX};
 use crate::masking::share_nibble_ops::{share_nibble_mult, share_nibble_square};
 use rand_chacha::ChaCha20Rng;
 
@@ -38,6 +38,7 @@ pub(crate) fn s_box(state: u128) -> u128 {
     u128::from_be_bytes(bytes)
 }
 
+#[deprecated]
 fn sub_field_s_box(byte: u8) -> u8 {
     let y = byte >> 4;
     let x = byte & 0b1111;
@@ -118,14 +119,15 @@ mod tests {
     }
 
     #[test]
-    fn fields_match() {
+    #[deprecated]
+    fn field_matches_precomputed() {
         for i in 0..u8::MAX {
             assert_eq!(sub_field_s_box(i), S_BOX_FLAT[i as usize]);
         }
     }
 
     #[test]
-    fn masked_matches() {
+    fn masked_matches_precomputed() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
         for i in 0..256 {

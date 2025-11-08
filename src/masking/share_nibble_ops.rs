@@ -1,7 +1,7 @@
 //! Nibble operations performed on shares.
 
-use crate::masking::next_u128;
-use crate::masking::nibble_ops::{nibble_mult_u128, nibble_square_u128};
+use crate::masking::nibble_ops::{nibble_mult_u112, nibble_square_u112};
+use crate::masking::{next_u112, next_u128};
 use rand_chacha::ChaCha20Rng;
 
 /// Raises the shares to the power of `2 ^ squares`.
@@ -11,7 +11,7 @@ use rand_chacha::ChaCha20Rng;
 pub(crate) fn share_nibble_square<const PX: u8, const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
-    shares.map(nibble_square_u128::<PX>)
+    shares.map(nibble_square_u112::<PX>)
 }
 
 pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(
@@ -25,17 +25,17 @@ pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(
 
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {
-            rng_table[i][j] = next_u128(rng);
+            rng_table[i][j] = next_u112(rng);
 
-            let ai_bj = nibble_mult_u128::<PX>(a[i], b[j]);
-            let aj_bi = nibble_mult_u128::<PX>(a[j], b[i]);
+            let ai_bj = nibble_mult_u112::<PX>(a[i], b[j]);
+            let aj_bi = nibble_mult_u112::<PX>(a[j], b[i]);
 
             rng_table[j][i] = (rng_table[i][j] ^ ai_bj) ^ aj_bi;
         }
     }
 
     for i in 0..SHARE_COUNT {
-        result[i] = nibble_mult_u128::<PX>(a[i], b[i]);
+        result[i] = nibble_mult_u112::<PX>(a[i], b[i]);
 
         for j in 0..SHARE_COUNT {
             if i != j {
@@ -50,6 +50,7 @@ pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masking::nibble_ops::nibble_mult;
     use crate::masking::{merge_u128, share_add, split_u128};
     use rand_chacha::rand_core::SeedableRng;
 
@@ -75,7 +76,7 @@ mod tests {
         for i in 0..255 {
             let shares = share_nibble_square::<PX, 2>(split_u128(i, &mut rng));
 
-            assert_eq!(merge_u128(shares), nibble_square_u128::<PX>(i));
+            assert_eq!(merge_u128(shares), nibble_square_u112::<PX>(i));
         }
     }
 
@@ -83,15 +84,18 @@ mod tests {
     fn linear_multiplication() {
         let mut rng = ChaCha20Rng::seed_from_u64(12345);
 
-        for a in 0..255 {
-            for b in 0..255 {
+        for a in 0..256 {
+            for b in 0..256 {
                 let shares = share_nibble_mult::<PX, 2>(
                     split_u128(a, &mut rng),
                     split_u128(b, &mut rng),
                     &mut rng,
                 );
 
-                assert_eq!(merge_u128(shares), nibble_mult_u128::<PX>(a, b));
+                assert_eq!(merge_u128(shares), nibble_mult_u112::<PX>(a, b));
+            }
+        }
+    }
             }
         }
     }
