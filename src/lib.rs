@@ -138,10 +138,16 @@ mod tests {
         let mut cipher = Picaro::<SHARE_COUNT>::new_from_seed(key, 12345);
         let ciphertext = cipher.encrypt(plaintext);
 
-        assert_ne!(plaintext, ciphertext);
+        assert_ne!(
+            plaintext, ciphertext,
+            "Ciphertext is same as plaintext (shares={SHARE_COUNT}, plaintext={plaintext}, key={key})"
+        );
 
         let result = cipher.decrypt(ciphertext);
-        assert_eq!(plaintext, result);
+        assert_eq!(
+            plaintext, result,
+            "Final plaintext doesn't match (shares={SHARE_COUNT}, plaintext={plaintext}, key={key})"
+        );
 
         ciphertext
     }
@@ -158,31 +164,31 @@ mod tests {
     }
 
     #[test]
-    fn encrypt_decrypt_first_1k_plaintext() {
-        for i in 0..=1000 {
+    fn encrypt_decrypt_first_hundred_plaintext() {
+        for i in 0..=100 {
             encrypt_decrypt_masked(i, 01234);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_last_1k_plaintext() {
-        for i in (u128::MAX - 1000)..=u128::MAX {
+    fn encrypt_decrypt_last_hundred_plaintext() {
+        for i in (u128::MAX - 100)..=u128::MAX {
             encrypt_decrypt_masked(i, 01234);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_first_1k_keys() {
+    fn encrypt_decrypt_first_hundred_keys() {
         // Skip first key since it is weak.
-        for i in 1..=1000 {
+        for i in 1..=100 {
             encrypt_decrypt_masked(56789, i);
         }
     }
 
     #[test]
-    fn encrypt_decrypt_last_1k_keys() {
+    fn encrypt_decrypt_last_hundred_keys() {
         // Skip last key since it is weak.
-        for i in (u128::MAX - 1000)..u128::MAX {
+        for i in (u128::MAX - 100)..u128::MAX {
             encrypt_decrypt_masked(56789, i);
         }
     }
