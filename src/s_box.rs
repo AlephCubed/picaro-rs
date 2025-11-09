@@ -1,4 +1,4 @@
-use crate::masking::nibble_ops::{PICARO_S_BOX, nibble_mult, nibble_square};
+use crate::masking::nibble_ops::PICARO_S_BOX;
 use crate::masking::share_nibble_ops::{share_nibble_mult, share_nibble_square};
 use rand_chacha::ChaCha20Rng;
 
@@ -36,20 +36,6 @@ fn unmasked_s_box(state: u128) -> u128 {
     }
 
     u128::from_be_bytes(bytes)
-}
-
-#[deprecated]
-fn sub_field_s_box(byte: u8) -> u8 {
-    let y = byte >> 4;
-    let x = byte & 0b1111;
-
-    let x_out = nibble_mult::<PICARO_S_BOX>(x, y);
-
-    let x3 = nibble_mult::<PICARO_S_BOX>(nibble_square::<PICARO_S_BOX>(x), x);
-    let y3 = nibble_mult::<PICARO_S_BOX>(nibble_square::<PICARO_S_BOX>(y), y);
-    let y_out = nibble_mult::<PICARO_S_BOX>(x3 ^ 0x02, y3 ^ 0x04);
-
-    (x_out << 4) ^ y_out
 }
 
 pub(crate) fn s_box<const SHARE_COUNT: usize>(
@@ -146,14 +132,6 @@ mod tests {
     #[should_panic(expected = "Must be an 112-bit number.")]
     fn over_112_bits() {
         unmasked_s_box(u128::MAX);
-    }
-
-    #[test]
-    #[deprecated]
-    fn field_matches_precomputed() {
-        for i in 0..u8::MAX {
-            assert_eq!(sub_field_s_box(i), S_BOX_FLAT[i as usize]);
-        }
     }
 
     #[test]
