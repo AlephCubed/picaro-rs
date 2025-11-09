@@ -63,16 +63,16 @@ pub(crate) fn s_box<const SHARE_COUNT: usize>(
     let mut out = [0u128; SHARE_COUNT];
 
     for i in 0..14 {
-        let mut byte_shares = [0u128; SHARE_COUNT];
+        let mut byte_shares = [0u8; SHARE_COUNT];
 
         for s in 0..SHARE_COUNT {
-            byte_shares[s] = (shares[s] >> i * 8) & 0xFF;
+            byte_shares[s] = (shares[s] >> i * 8) as u8;
         }
 
         byte_shares = s_box_byte::<SHARE_COUNT>(byte_shares, rng);
 
         for s in 0..SHARE_COUNT {
-            out[s] |= byte_shares[s] << i * 8;
+            out[s] |= (byte_shares[s] as u128) << i * 8;
         }
     }
 
@@ -80,9 +80,9 @@ pub(crate) fn s_box<const SHARE_COUNT: usize>(
 }
 
 pub(crate) fn s_box_byte<const SHARE_COUNT: usize>(
-    shares: [u128; SHARE_COUNT],
+    shares: [u8; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
-) -> [u128; SHARE_COUNT] {
+) -> [u8; SHARE_COUNT] {
     let y = shares.map(|s| s >> 4);
     let x = shares.map(|s| s & 0xF);
 
@@ -105,7 +105,7 @@ pub(crate) fn s_box_byte<const SHARE_COUNT: usize>(
     let y_out = share_nibble_mult::<PICARO_S_BOX, SHARE_COUNT>(x3, y3, rng);
 
     for i in 0..SHARE_COUNT {
-        x_out[i] = ((x_out[i] << 4) ^ y_out[i]) & 0xFF;
+        x_out[i] = (x_out[i] << 4) ^ y_out[i];
     }
 
     x_out
