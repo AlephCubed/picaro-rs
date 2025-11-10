@@ -100,8 +100,8 @@ impl<const SHARE_COUNT: usize> Picaro<SHARE_COUNT> {
 fn shares_u112_to_u64<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
 ) -> ([u64; SHARE_COUNT], [u64; SHARE_COUNT]) {
-    let mut left = core::array::from_fn(|_| u64::default());
-    let mut right = core::array::from_fn(|_| u64::default());
+    let mut left = [0; SHARE_COUNT];
+    let mut right = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         left[i] = (shares[i] >> 64) as u64;
@@ -116,7 +116,7 @@ fn shares_u64_to_u128<const SHARE_COUNT: usize>(
     left: [u64; SHARE_COUNT],
     right: [u64; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
-    let mut result = core::array::from_fn(|_| u128::default());
+    let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         result[i] = ((left[i] as u128) << 64) | (right[i] as u128)

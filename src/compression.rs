@@ -15,7 +15,7 @@ const G_LAST_SIX: [[u8; 6]; 8] = [
 pub(crate) fn share_compression<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
 ) -> [u64; SHARE_COUNT] {
-    let mut result = core::array::from_fn(|_| u64::default());
+    let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         result[i] = compression(shares[i]);

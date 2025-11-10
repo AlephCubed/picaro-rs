@@ -14,7 +14,7 @@ const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
 pub(crate) fn share_expansion<const SHARE_COUNT: usize>(
     shares: [u64; SHARE_COUNT],
 ) -> [u128; SHARE_COUNT] {
-    let mut result = core::array::from_fn(|_| u128::default());
+    let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         result[i] = expansion(shares[i]);

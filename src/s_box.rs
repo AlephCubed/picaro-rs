@@ -43,10 +43,10 @@ pub fn s_box<const SHARE_COUNT: usize>(
         return shares.map(unmasked_s_box);
     }
 
-    let mut out = [0u128; SHARE_COUNT];
+    let mut out = [0; SHARE_COUNT];
 
     for i in 0..14 {
-        let mut byte_shares = [0u8; SHARE_COUNT];
+        let mut byte_shares = [0; SHARE_COUNT];
 
         for s in 0..SHARE_COUNT {
             byte_shares[s] = (shares[s] >> i * 8) as u8;

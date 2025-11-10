@@ -19,8 +19,8 @@ pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(
     b: [u8; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u8; SHARE_COUNT] {
-    let mut rng_table = [[0u8; SHARE_COUNT]; SHARE_COUNT];
-    let mut result = [0u8; SHARE_COUNT];
+    let mut rng_table = [[0; SHARE_COUNT]; SHARE_COUNT];
+    let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {

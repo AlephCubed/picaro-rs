@@ -28,9 +28,8 @@ pub(crate) fn share_byte_mult<const PX: u16, const SHARE_COUNT: usize>(
     b: [u128; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
-    let mut rng_table: [[u128; SHARE_COUNT]; SHARE_COUNT] =
-        core::array::from_fn(|_| core::array::from_fn(|_| u128::default()));
-    let mut result = core::array::from_fn(|_| u128::default());
+    let mut rng_table = [[0; SHARE_COUNT]; SHARE_COUNT];
+    let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
         for j in (i + 1)..SHARE_COUNT {
