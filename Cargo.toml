@@ -25,3 +25,8 @@ harness = false
 name = "picaro_s_box"
 path = "benches/picaro/s_box.rs"
 harness = false
+
+[[bench]]
+name = "aes_s_box"
+path = "benches/aes/s_box.rs"
+harness = false

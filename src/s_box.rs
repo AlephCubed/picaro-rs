@@ -23,9 +23,6 @@ const S_BOX_FLAT: [u8; 256] = [
     0x01, 0xfd, 0x75, 0x8a, 0xea, 0x1c, 0x9f, 0x6a, 0x5f, 0xac, 0x2d, 0xdd, 0xbc, 0x45, 0xcf, 0x35,
 ];
 
-/// Applies the S-Box to a 112-bit number.
-/// # Panics
-/// If the number is larger than 112-bits.
 fn unmasked_s_box(state: u128) -> u128 {
     debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
