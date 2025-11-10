@@ -12,13 +12,16 @@ rand_chacha = { version = "0.9.0", default-features = false, features = [
 criterion = { version = "0.7" }
 
 [[bench]]
-name = "encrypt"
+name = "picaro_encrypt"
+path = "benches/picaro/encrypt.rs"
 harness = false
 
 [[bench]]
-name = "decrypt"
+name = "picaro_decrypt"
+path = "benches/picaro/decrypt.rs"
 harness = false
 
 [[bench]]
-name = "s_box"
+name = "picaro_s_box"
+path = "benches/picaro/s_box.rs"
 harness = false
