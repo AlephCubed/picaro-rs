@@ -29,13 +29,13 @@ const S_BOX_FLAT: [u8; 256] = [
 fn unmasked_s_box(state: u128) -> u128 {
     debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
-    let mut bytes = state.to_be_bytes();
+    let mut result = 0;
 
-    for i in 2..16 {
-        bytes[i] = S_BOX_FLAT[bytes[i] as usize];
+    for i in 0..14 {
+        result |= (S_BOX_FLAT[(state >> i * 8) as u8 as usize] as u128) << i * 8;
     }
 
-    u128::from_be_bytes(bytes)
+    result
 }
 
 pub fn s_box<const SHARE_COUNT: usize>(
