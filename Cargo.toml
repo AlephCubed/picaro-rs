@@ -18,3 +18,7 @@ harness = false
 [[bench]]
 name = "decrypt"
 harness = false
+
+[[bench]]
+name = "s_box"
+harness = false

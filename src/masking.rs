@@ -24,7 +24,7 @@ pub(crate) fn split_u128<const SHARE_COUNT: usize>(
 }
 
 #[inline]
-pub(crate) fn split_u112<const SHARE_COUNT: usize>(
+pub fn split_u112<const SHARE_COUNT: usize>(
     secret: u128,
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
@@ -59,10 +59,7 @@ pub(crate) fn split_u64<const SHARE_COUNT: usize>(
 
 // Todo
 #[inline]
-pub(crate) fn split_u8<const SHARE_COUNT: usize>(
-    secret: u8,
-    rng: &mut ChaCha20Rng,
-) -> [u8; SHARE_COUNT] {
+pub fn split_u8<const SHARE_COUNT: usize>(secret: u8, rng: &mut ChaCha20Rng) -> [u8; SHARE_COUNT] {
     let mut result = [0u8; SHARE_COUNT];
     result[0] = secret;
 

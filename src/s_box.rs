@@ -38,7 +38,7 @@ fn unmasked_s_box(state: u128) -> u128 {
     u128::from_be_bytes(bytes)
 }
 
-pub(crate) fn s_box<const SHARE_COUNT: usize>(
+pub fn s_box<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u128; SHARE_COUNT] {
@@ -65,7 +65,7 @@ pub(crate) fn s_box<const SHARE_COUNT: usize>(
     out
 }
 
-pub(crate) fn s_box_byte<const SHARE_COUNT: usize>(
+pub fn s_box_byte<const SHARE_COUNT: usize>(
     shares: [u8; SHARE_COUNT],
     rng: &mut ChaCha20Rng,
 ) -> [u8; SHARE_COUNT] {
