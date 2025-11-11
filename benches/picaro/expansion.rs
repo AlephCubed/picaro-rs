@@ -5,7 +5,7 @@ use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::SeedableRng;
 use std::hint::black_box;
 
-fn bench_decrypt<const SHARE_COUNT: usize>(c: &mut Criterion) {
+fn bench_expansion<const SHARE_COUNT: usize>(c: &mut Criterion) {
     let mut rng = ChaCha20Rng::seed_from_u64(1234);
 
     let shares = split_u64::<SHARE_COUNT>(1234, &mut rng);
@@ -16,10 +16,10 @@ fn bench_decrypt<const SHARE_COUNT: usize>(c: &mut Criterion) {
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    bench_decrypt::<1>(c);
-    bench_decrypt::<2>(c);
-    bench_decrypt::<3>(c);
-    bench_decrypt::<4>(c);
+    bench_expansion::<1>(c);
+    bench_expansion::<2>(c);
+    bench_expansion::<3>(c);
+    bench_expansion::<4>(c);
 }
 
 criterion_group!(benches, criterion_benchmark);

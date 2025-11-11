@@ -12,7 +12,7 @@ pub(crate) const G_LAST_SIX: [[u8; 6]; 8] = [
     [0x01, 0x0A, 0x01, 0x09, 0x0C, 0x06],
 ];
 
-pub(crate) fn share_compression<const SHARE_COUNT: usize>(
+pub fn share_compression<const SHARE_COUNT: usize>(
     shares: [u128; SHARE_COUNT],
 ) -> [u64; SHARE_COUNT] {
     let mut result = [0; SHARE_COUNT];
@@ -24,25 +24,23 @@ pub(crate) fn share_compression<const SHARE_COUNT: usize>(
     result
 }
 
-// Todo Performance might be bad.
 /// Compresses the state into a 64-bit number.
-pub(crate) fn compression(state: u128) -> u64 {
+fn compression(state: u128) -> u64 {
     debug_assert_eq!(state >> 112, 0, "Must be an 112-bit number.");
 
-    let bytes = state.to_be_bytes();
-    let mut result = (state as u64).to_be_bytes();
+    let mut result = state as u64;
 
     for i in 0..8 {
-        result[i] ^= bytes
-            .iter()
-            .skip(8)
-            .zip(G_LAST_SIX[i])
-            .map(|(byte, g)| byte_mult::<PICARO_EC>(*byte, g))
-            .reduce(|sum, e| sum ^ e)
-            .expect("There will always be 6 elements");
+        let mut sum = 0;
+
+        for j in 0..6 {
+            sum ^= byte_mult::<PICARO_EC>((state >> 8 * (8 + j)) as u8, G_LAST_SIX[i][j])
+        }
+
+        result ^= (sum as u64) << 8 * i;
     }
 
-    u64::from_be_bytes(result)
+    result
 }
 
 #[cfg(test)]
@@ -56,6 +54,33 @@ mod tests {
     #[should_panic(expected = "Must be an 112-bit number.")]
     fn over_112_bits() {
         compression(u128::MAX);
+    }
+
+    #[test]
+    fn test_compression_identity_first_100k() {
+        for i in 0..100000 {
+            assert_eq!(compression(i as u128), i);
+        }
+    }
+
+    #[test]
+    fn test_compression_identity_last_100k() {
+        for i in (u64::MAX - 100000)..u64::MAX {
+            assert_eq!(compression(i as u128), i);
+        }
+    }
+
+    #[test]
+    fn test_expansion_bytes_ones() {
+        let input = 0x010101010101 << 8 * 8;
+
+        let output = compression(input);
+
+        for i in 0..6 {
+            let sum = G_LAST_SIX[i].iter().fold(0, |sum, e| sum ^ *e);
+
+            assert_eq!((output >> 8 * i) as u8, sum);
+        }
     }
 
     fn test_masked_compression<const SHARE_COUNT: usize>(
