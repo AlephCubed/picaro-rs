@@ -1,15 +1,5 @@
+use crate::compression::G_LAST_SIX;
 use crate::masking::byte_ops::{PICARO_EC, byte_mult};
-
-/// The last 6 columns of the matrix G, transposed.
-/// This makes it easier to perform linear combinations in the [`expansion`] function.
-const G_LAST_SIX_TRANSPOSED: [[u8; 8]; 6] = [
-    [0x1, 0x5, 0x6, 0xC, 0x9, 0x1, 0xA, 0x1],
-    [0x1, 0x1, 0x5, 0x6, 0xC, 0x9, 0x1, 0xA],
-    [0xA, 0x1, 0x1, 0x5, 0x6, 0xC, 0x9, 0x1],
-    [0x1, 0xA, 0x1, 0x1, 0x5, 0x6, 0xC, 0x9],
-    [0x9, 0x1, 0xA, 0x1, 0x1, 0x5, 0x6, 0xC],
-    [0xC, 0x9, 0x1, 0xA, 0x1, 0x1, 0x5, 0x6],
-];
 
 pub fn share_expansion<const SHARE_COUNT: usize>(
     shares: [u64; SHARE_COUNT],
@@ -33,7 +23,7 @@ fn expansion(right: u64) -> u128 {
         let mut sum = 0;
 
         for j in 0..8 {
-            sum ^= byte_mult::<PICARO_EC>((right >> 8 * j) as u8, G_LAST_SIX_TRANSPOSED[i][j]);
+            sum ^= byte_mult::<PICARO_EC>((right >> 8 * j) as u8, G_LAST_SIX[j][i]);
         }
 
         result |= (sum as u128) << 8 * (i + 8);
@@ -65,9 +55,11 @@ mod tests {
         let output = expansion(input);
 
         for i in 0..6 {
-            let sum = G_LAST_SIX_TRANSPOSED[6 - i - 1]
-                .iter()
-                .fold(0, |sum: u8, e: &u8| sum ^ *e);
+            let mut sum = 0;
+
+            for j in 0..8 {
+                sum ^= G_LAST_SIX[j][6 - i - 1];
+            }
 
             assert_eq!((output >> 8 * (8 + i)) as u8, sum);
         }
