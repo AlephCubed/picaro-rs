@@ -128,6 +128,7 @@ fn shares_u64_to_u128<const SHARE_COUNT: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masking::next_u128;
 
     /// Tests that:
     /// 1. The cipher text is different from the plaintext.
@@ -190,6 +191,22 @@ mod tests {
         // Skip last key since it is weak.
         for i in (u128::MAX - 100)..u128::MAX {
             encrypt_decrypt_masked(56789, i);
+        }
+    }
+
+    #[test]
+    fn encrypt_decrypt_random_hundred_plaintext() {
+        let mut rng = ChaCha20Rng::seed_from_u64(01234);
+        for _ in 0..100 {
+            encrypt_decrypt_masked(next_u128(&mut rng), 56789);
+        }
+    }
+
+    #[test]
+    fn encrypt_decrypt_random_hundred_keys() {
+        let mut rng = ChaCha20Rng::seed_from_u64(01234);
+        for _ in 0..100 {
+            encrypt_decrypt_masked(56789, next_u128(&mut rng));
         }
     }
 }

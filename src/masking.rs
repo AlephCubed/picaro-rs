@@ -41,7 +41,7 @@ pub fn split_u112<const SHARE_COUNT: usize>(
 }
 
 #[inline]
-pub(crate) fn split_u64<const SHARE_COUNT: usize>(
+pub fn split_u64<const SHARE_COUNT: usize>(
     secret: u64,
     rng: &mut ChaCha20Rng,
 ) -> [u64; SHARE_COUNT] {
