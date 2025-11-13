@@ -2,6 +2,9 @@
 name = "picaro-rs"
 version = "0.1.0"
 edition = "2024"
+description = "An attempt at an implementation of the Picaro cipher, for a university project."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/AlephCubed/picaro-rs"
 authors = ["Josiah Nelson"]
 
 [dependencies]
