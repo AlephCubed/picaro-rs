@@ -3,8 +3,8 @@ pub mod nibble_ops;
 pub mod share_byte_ops;
 pub mod share_nibble_ops;
 
-use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::RngCore;
+use rand_chacha::ChaCha20Rng;
 
 #[inline]
 pub(crate) fn split_u128<const SHARE_COUNT: usize>(
@@ -96,6 +96,7 @@ pub(crate) fn merge_u128<const SHARE_COUNT: usize>(shares: [u128; SHARE_COUNT]) 
 }
 
 #[inline]
+#[cfg(test)]
 pub(crate) fn merge_u64<const SHARE_COUNT: usize>(shares: [u64; SHARE_COUNT]) -> u64 {
     let mut result = shares[0];
 
@@ -107,6 +108,7 @@ pub(crate) fn merge_u64<const SHARE_COUNT: usize>(shares: [u64; SHARE_COUNT]) ->
 }
 
 #[inline]
+#[cfg(test)]
 pub(crate) fn merge_u8<const SHARE_COUNT: usize>(shares: [u8; SHARE_COUNT]) -> u8 {
     let mut result = shares[0];
 
@@ -154,6 +156,7 @@ pub(crate) fn share_add_u64<const SHARE_COUNT: usize>(
 }
 
 #[inline]
+#[cfg(test)]
 pub(crate) fn share_add_u8<const SHARE_COUNT: usize>(
     mut a: [u8; SHARE_COUNT],
     b: [u8; SHARE_COUNT],

@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 #![no_std]
 
 pub mod aes;
@@ -10,11 +11,11 @@ pub mod s_box;
 use crate::compression::share_compression;
 use crate::expansion::share_expansion;
 use crate::key_schedule::round_key;
-use crate::masking::{merge_u128, share_add_u64, share_add_u112, split_u128};
+use crate::masking::{merge_u128, share_add_u112, share_add_u64, split_u128};
 use crate::s_box::s_box;
 use core::mem::swap;
-use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::SeedableRng;
+use rand_chacha::ChaCha20Rng;
 
 /// Returns true if the key is weak.
 pub fn is_weak_key(main_key: u128) -> bool {
@@ -33,7 +34,16 @@ pub struct Picaro<const SHARE_COUNT: usize = 1> {
 }
 
 impl<const SHARE_COUNT: usize> Picaro<SHARE_COUNT> {
-    /// Creates a new Picaro object using the given key.
+    /// Creates a new Picaro object using the given key and RNG.
+    /// # Panics
+    /// Will panic if the key is one of Picaro's four [weak keys](is_weak_key).
+    pub fn new(main_key: u128, rng: ChaCha20Rng) -> Self {
+        assert!(!is_weak_key(main_key), "Weak key was provided!");
+
+        Self { main_key, rng }
+    }
+
+    /// Creates a new Picaro object using the given key and [`ChaCha20Rng`] seed.
     /// # Panics
     /// Will panic if the key is one of Picaro's four [weak keys](is_weak_key).
     pub fn new_from_seed(main_key: u128, seed: u64) -> Self {
