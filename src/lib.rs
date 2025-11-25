@@ -11,11 +11,11 @@ pub mod s_box;
 use crate::compression::share_compression;
 use crate::expansion::share_expansion;
 use crate::key_schedule::round_key;
-use crate::masking::{merge_u128, share_add_u112, share_add_u64, split_u128};
+use crate::masking::{merge_u128, share_add_u64, share_add_u112, split_u128};
 use crate::s_box::s_box;
 use core::mem::swap;
-use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha20Rng;
+use rand_chacha::rand_core::SeedableRng;
 
 /// Returns true if the key is weak.
 pub fn is_weak_key(main_key: u128) -> bool {

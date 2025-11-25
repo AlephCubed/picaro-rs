@@ -2,7 +2,7 @@
 
 use crate::masking::nibble_ops::{nibble_mult_byte, nibble_square_byte};
 use rand_chacha::ChaCha20Rng;
-use rand_chacha::rand_core::RngCore;
+use rand_chacha::rand_core::impls::fill_bytes_via_next;
 
 /// Raises the shares to the power of `2 ^ squares`.
 /// # Panics
@@ -23,9 +23,10 @@ pub(crate) fn share_nibble_mult<const PX: u8, const SHARE_COUNT: usize>(
     let mut result = [0; SHARE_COUNT];
 
     for i in 0..SHARE_COUNT {
-        for j in (i + 1)..SHARE_COUNT {
-            rng_table[i][j] = rng.next_u32() as u8; // Todo
+        // Todo Could theoretically be optimized more, by generating for multiple rows at once.
+        fill_bytes_via_next(rng, &mut rng_table[i][(i + 1)..SHARE_COUNT]);
 
+        for j in (i + 1)..SHARE_COUNT {
             let ai_bj = nibble_mult_byte::<PX>(a[i], b[j]);
             let aj_bi = nibble_mult_byte::<PX>(a[j], b[i]);
 
