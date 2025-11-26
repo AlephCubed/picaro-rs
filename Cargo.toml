@@ -50,3 +50,8 @@ harness = false
 name = "aes_encrypt_extern"
 path = "benches/aes/encrypt_extern.rs"
 harness = false
+
+[[bench]]
+name = "aes_decrypt_extern"
+path = "benches/aes/decrypt_extern.rs"
+harness = false
