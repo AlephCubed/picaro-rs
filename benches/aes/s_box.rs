@@ -1,3 +1,5 @@
+mod encrypt_extern;
+
 use criterion::{Criterion, criterion_group, criterion_main};
 use picaro_rs::aes::{aes_affine_transformation, aes_inversion, aes_s_box};
 use picaro_rs::masking::split_u112;
